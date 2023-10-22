@@ -12,7 +12,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - ${POSTGRES_PORT}:${DATABASE_PORT}
+      - ${POSTGRES_PORT}:5432
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}" ]
       interval: 1s
@@ -25,7 +25,7 @@ services:
 
   flask:
     container_name: course_project
-    build: ..
+    build: .
     env_file: .env
     environment:
       - POSTGRES_HOST=host.docker.internal
