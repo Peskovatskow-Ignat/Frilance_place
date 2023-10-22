@@ -1,0 +1,51 @@
+version: '3.8'
+
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:15.1
+    container_name: course_project_python
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - ${POSTGRES_PORT}:${DATABASE_PORT}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}" ]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-tier
+
+  flask:
+    container_name: course_project
+    build: ..
+    env_file: .env
+    environment:
+      - POSTGRES_HOST=host.docker.internal
+      - FLASK_RUN_PORT=${FLASK_PORT}
+    ports:
+      - "${FLASK_PORT}:${FLASK_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-tier
+
+  flyway:
+    image: flyway/flyway:9.8.1
+    volumes:
+      - ./migrations:/flyway/sql
+    network_mode: host
+    command: -url=jdbc:postgresql://127.0.0.1:${POSTGRES_PORT}/${POSTGRES_DB} -user=${POSTGRES_USER} -password=${POSTGRES_PASSWORD} migrate
+    depends_on:
+      postgres:
+        condition: service_healthy

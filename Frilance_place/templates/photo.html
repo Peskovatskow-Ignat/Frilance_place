@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загрузка фотографии</title>
+</head>
+<body>
+    <h1>Загрузите вашу фотографию</h1>
+
+    <form action="/pp" method="post" enctype="multipart/form-data">
+        <input type="file" name="photo" accept="image/*" required>
+        <br>
+        <input type="submit" value="Загрузить">
+    </form>
+</body>
+</html>

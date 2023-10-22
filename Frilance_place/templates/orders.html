@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html style="font-size: 16px;" lang="ru">
+<head>
+    <meta name="generator" content="Nicepage 5.18.6, nicepage.com">
+    <meta name="referrer" content="origin">
+    <link id="u-theme-google-font" rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,500,500i,600,600i,700,700i,800,800i">
+    <link id="u-page-google-font" rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/orders.css') }}" media="screen">
+    <title>Orders</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/money.png') }}" type="image/x-icon">
+
+    <style>
+        .block-container {
+            margin-bottom: 240px; /* Adjust the value to control the spacing */
+        }
+    </style>
+    <script type="application/ld+json">{
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        "name": "игнат",
+        "logo": "images/540221706-01.png"
+    }</script>
+    <meta name="theme-color" content="#478ac9">
+    <meta property="og:title" content="Profiles">
+    <meta property="og:type" content="website">
+    <meta data-intl-tel-input-cdn-path="intlTelInput/">
+
+    <script src="{{ url_for('static', filename='js/signup.js') }}"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+</head>
+{% extends 'base.html' %}
+{% block content %}
+
+<body data-path-to-root="./" class="u-body u-xl-mode" data-lang="ru">
+<section class="u-clearfix u-custom-color-3 u-section-1" id="sec-591d">
+    <div class="u-clearfix u-sheet u-sheet-1">
+        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-1">
+            <div class="u-container-layout">
+                <p class="u-text u-text-grey-40 u-text-1">Figma</p>
+            </div>
+        </div>
+        <div class="u-align-center u-clearfix u-expanded-width u-group-elements u-group-elements-1">
+            <h3 class="u-text u-text-2">Orders</h3>
+            <div class="u-border-2 u-border-white u-expanded-width u-line u-line-horizontal u-opacity u-opacity-25 u-line-1"></div>
+        </div>
+        <h3 class="u-text u-text-grey-30 u-text-3">{{ count }} Orders</h3>
+
+        <div class="u-form u-form-1">
+            <form action="https://forms.nicepagesrv.com/v2/form/process"
+                  class="u-clearfix u-form-spacing-15 u-form-vertical u-inner-form" style="padding: 15px;"
+                  source="email" name="form">
+                <div class="u-form-group u-form-select u-label-none">
+                    <label for="select-d4ef" class="u-label">Выпадающий список</label>
+                    <div class="u-form-select-wrapper">
+                        <select id="select-d4ef" name="select"
+                                class="u-custom-color-3 u-custom-font u-input u-input-rectangle u-radius-10 u-input-1">
+                            <option value="По популярности" data-calc="">По популярности</option>
+                            <option value="По рейтингу" data-calc="">По рейтингу</option>
+                            <option value="По возрастанию цены" data-calc="">По возрастанию цены</option>
+                            <option value="По убыванию цены" data-calc="">По убыванию цены</option>
+                        </select>
+                        <svg class="u-caret u-caret-svg" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+                             xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="16px" height="16px"
+                             viewBox="0 0 16 16" style="fill:currentColor;" xml:space="preserve"><polygon class="st0" points="8,12 2,4 14,4 "></polygon></svg>
+                    </div>
+                </div>
+                <div class="u-align-center u-form-group u-form-submit u-label-none">
+                    <a href="#"
+                       class="u-border-none u-btn u-btn-submit u-button-style u-none u-text-custom-color-3 u-btn-1">Submit</a>
+                    <input type="submit" value="submit" class="u-form-control-hidden">
+                </div>
+                <div class="u-form-send-message u-form-send-success">Thank you! Your message has been sent.</div>
+                <div class="u-form-send-error u-form-send-message">Unable to send your message. Please fix errors then
+                    try again.
+                </div>
+                <input type="hidden" value="" name="recaptchaResponse">
+                <input type="hidden" name="formServices" value="a2d74e8a-6d45-8201-8985-8f0a034ff661">
+            </form>
+        </div>
+
+        {% for order in orders %}
+        <div class="u-expanded-width u-list u-list-1 block-container" style="margin-bottom: 80px;">
+
+            <div class="u-repeater u-repeater-1">
+                <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-1">
+                    <div class="u-container-layout u-similar-container u-valign-middle u-container-layout-2">
+                        <h4 class="u-text u-text-default u-text-4">{{ order.title }}</h4>
+                        <p class="u-text u-text-custom-color-1 u-text-default u-text-5">{{order.price}}$</p>
+                        <p class="u-text u-text-grey-40 u-text-8">{{ order.date_created }}</p>
+                        <p class="u-text u-text-default u-text-7">{{ order.description }}</p>
+                        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-2">
+                            <div class="u-container-layout u-container-layout-3">
+                                <p class="u-text u-text-default u-text-grey-40 u-text-8">{{ order.skill }}</p>
+                            </div>
+                        </div>
+                        <a href="/order/{{ order.id }}"
+                           class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Accept</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+</section>
+
+
+
+{% endblock %}
+
+</body>
+</html>
