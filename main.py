@@ -1,15 +1,13 @@
-from flask import Flask, render_template, url_for, request, redirect, session, flash, get_flashed_messages
-from flask_mail import Mail, Message
-from sqlalchemy.dialects.postgresql import psycopg2
-import hashlib
-from functions import resize_and_convert_to_jpg, profile_photo, generate_secure_string
-import base64
-from flask import Flask, request, logging
 import logging
-from datetime import datetime, timedelta
-
 import os
 import psycopg2
+import hashlib
+
+from flask import render_template, redirect, session, flash, Flask, request, logging
+from flask_mail import Mail, Message
+from functions import resize_and_convert_to_jpg, profile_photo, generate_secure_string
+from datetime import datetime, timedelta
+import base64
 
 
 def get_pg_connect():
@@ -573,7 +571,7 @@ def profile_customer_search(id):
                             ) AS counter
                         FROM orders o
                         WHERE o.customer_id = %s;""",
-                    (int(id), )
+                    (int(id),)
                     )
         orders_list = []
         for order in cur.fetchall():
