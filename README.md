@@ -90,8 +90,7 @@
     MAIL_PASSWORD - Пароль вашей почты для приложений
     MAIL_DEFAULT_SENDER - Адрес вашей почты
     
-    DB_HOST - Адрес хоста БД
-    DATABASE_PORT - Порт БД
+
     POSTGRES_PORT - Порт Postgres внутри docker compose
     POSTGRES_DB - Название БД
     POSTGRES_USER - Пользователь БД
