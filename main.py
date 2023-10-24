@@ -511,13 +511,13 @@ def profile_customer():
                         WHERE o.customer_id = %s;""",
                         (str(data['id']))
                         )
-            orders_list = []
+            active_orders_list = []
             for order in cur.fetchall():
                 id, title, description, price, date_created, customer_id, skill, status, counter = order
                 # Format the date as 'dd-mm-yyyy'
                 formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-                orders_list.append({
+                active_orders_list.append({
                     'id': id,
                     'title': title,
                     'description': description,
@@ -528,7 +528,51 @@ def profile_customer():
                     'status': status,
                     'counter': counter
                 })
-            return render_template('customer/profile.html', user=user_data, orders=orders_list)
+
+            cur.execute("""with test as (
+                        SELECT o.id as order_id, COUNT(*) as comment_num
+                        FROM executor_to_order eto
+                        JOIN orders o ON eto.order_id = o.id
+                        where eto.status = False
+                        group by o.id
+                        )
+                        SELECT
+                            o.id as order_id,
+                            o.title,
+                            o.description,
+                            o.price,
+                            o.date,
+                            o.customer_id,
+                            o.skill,
+                            o.status,
+                            (
+                                SELECT comment_num
+                                FROM test eto
+                                WHERE o.id = eto.order_id
+                            ) AS counter
+                        FROM orders o
+                        WHERE o.customer_id = %s;""",
+                        (str(data['id']))
+                        )
+            success_order_list = []
+            for order in cur.fetchall():
+                id, title, description, price, date_created, customer_id, skill, status, counter = order
+                # Format the date as 'dd-mm-yyyy'
+                formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+
+                success_order_list.append({
+                    'id': id,
+                    'title': title,
+                    'description': description,
+                    'price': price,
+                    'date_created': formatted_date,
+                    'customer_id': customer_id,
+                    'skill': skill,
+                    'status': status,
+                    'counter': counter
+                })
+            return render_template('customer/profile.html', user=user_data, active_orders=active_orders_list,
+                                   success_order=success_order_list)
         except Exception as ex:
             logging.error(ex, exc_info=True)
             conn.rollback()
@@ -811,7 +855,7 @@ def reset_password():
             msg.html = render_template('email_reset_password.html', hash=session.get('token')['token'])
             mail.send(msg)
         except Exception as ex:
-            logging.error(ex, exc_info=True)
+            flash("Пользователя с почтой %s не существует", email)
             conn.rollback()
             conn.close()
             return redirect('/')
