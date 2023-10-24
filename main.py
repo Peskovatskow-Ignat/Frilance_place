@@ -11,13 +11,27 @@ import base64
 
 
 def get_pg_connect():
-    conn = psycopg2.connect(
-        host='postgres',
-        port=5432,
-        database=os.getenv("POSTGRES_DB"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD")
-    )
+    """
+    Try executing создан для удобство для того чтобы не запускать через compose
+    подклчение к созданому контейнеру
+    """
+
+    try:
+        conn = psycopg2.connect(
+            host='postgres',
+            port=5432,
+            database=os.getenv("POSTGRES_DB"),
+            user=os.getenv("POSTGRES_USER"),
+            password=os.getenv("POSTGRES_PASSWORD")
+        )
+    except Exception as ex:
+        conn = psycopg2.connect(
+            host='localhost',
+            port=3434,
+            database='flask',
+            user='admin',
+            password='change_me'
+        )
 
     return conn
 
@@ -281,7 +295,7 @@ def sign_up():
             if email in existing_emails:
                 conn.close()
                 flash(f'Пользователь с почтой {email} уже зарегистрирован')
-                return render_template('sign_up.html', email_exists=True)
+                return redirect('/')
 
             cur.execute(
                 f"""INSERT INTO {roll} (username, email, password, first_name, last_name) VALUES (%s, %s, %s, %s, %s)""",
@@ -762,10 +776,10 @@ def add_order(id):
 join customer c on c.id = o.customer_id 
 where o.id = %s""", (id,))
         customer_email = cur.fetchone()[0]
-        # msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
-        #               recipients=[customer_email])
-        # msg.html = render_template('email_orders_add.html', email=email_executor)
-        # mail.send(msg)
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=[customer_email])
+        msg.html = render_template('email_orders_add.html', email=email_executor)
+        mail.send(msg)
         cur.execute("""
                 INSERT INTO executor_to_order (order_id, executor_id)
                 VALUES (%s, %s)""", (id, str(data['id'])))
@@ -808,12 +822,8 @@ def reset_password():
 @app.route('/reset/<token>', methods=['GET', 'POST'])
 def reset(token):
     sub_token = session.get('token')
-    print(1)
-    print(token, sub_token)
     if token == sub_token['token']:
-        print(2)
         if request.method == 'POST':
-            print(3)
             conn = get_pg_connect()
             cur = conn.cursor()
             if request.form.get('password') != request.form.get('sub_password'):
