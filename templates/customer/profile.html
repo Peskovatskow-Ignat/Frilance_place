@@ -92,16 +92,16 @@
             order</a>
 
         <div class="u-align-left u-border-2 u-border-white u-expanded-width u-line u-line-horizontal u-opacity u-opacity-25 u-line-2"></div>
-        {% for order in orders %}
+        {% for order in active_orders %}
 <div class="u-expanded-width u-list u-list-1">
 
     <div class="u-repeater u-repeater-1">
         <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-1">
             <div class="u-container-layout u-similar-container u-container-layout-1">
-                <h4 class="u-text u-text-default u-text-6">{{ active_orders.title }}</h4>
-                <p class="u-text u-text-custom-color-1 u-text-default u-text-7">{{active_orders.price}}$</p>
-                <p class="u-text u-text-grey-40 u-text-6" style="text-align: center;">Posted {{ active_orders.date_created }}</p>
-                <p class="u-text u-text-9"> {{ active_orders.description }} </p>
+                <h4 class="u-text u-text-default u-text-6">{{ order.title }}</h4>
+                <p class="u-text u-text-custom-color-1 u-text-default u-text-7">{{ order.price }}$</p>
+                <p class="u-text u-text-grey-40 u-text-6" style="text-align: center;">Posted {{ order.date_created }}</p>
+                <p class="u-text u-text-9"> {{ order.description }} </p>
                 <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-1">
                     <div class="u-container-layout u-container-layout-2">
                         <p class="u-text u-text-default u-text-grey-40 u-text-10">kjfsd</p>
@@ -121,30 +121,43 @@
 </div>
 
         {% endfor %}
-        <a href="https://nicepage.com/k/yoga-html-templates"
-           class="u-align-center u-border-none u-btn u-button-style u-custom-color-2 u-hover-feature u-hover-white u-text-body-alt-color u-text-hover-black u-btn-3">More</a>
+        <a href="{{ url_for('index') }}"
+           class="u-align-center u-border-none u-btn u-button-style u-custom-color-2 u-hover-feature u-hover-white u-text-body-alt-color u-text-hover-black u-btn-3">Redirect Main page</a>
         <div class="u-align-center u-clearfix u-expanded-width u-group-elements u-group-elements-2">
+            {% if success_order %}
             <h3 class="u-text u-text-12">Closed orders</h3>
             <div class="u-border-2 u-border-white u-expanded-width u-line u-line-horizontal u-opacity u-opacity-25 u-line-3"></div>
         </div>
-        <div class="u-expanded-width u-list u-list-2">
-            <div class="u-repeater u-repeater-2">
-                <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-2">
-                    <div class="u-container-layout u-similar-container u-container-layout-4">
-                        <h4 class="u-text u-text-default u-text-13">Site</h4>
-                        <p class="u-text u-text-custom-color-1 u-text-default u-text-14">600$</p>
-                        <p class="u-text u-text-grey-40 u-text-15">Posted 19 hours ago</p>
-                        <p class="u-text u-text-16">Sample text. Click to select the text box. Click again or double
-                            click to start editing the text.&nbsp;Excepteur sint occaecat cupidatat non proident, sunt
-                            in culpa qui officia deserunt mollit anim id est laborum.</p>
-                        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-3">
-                            <div class="u-container-layout u-container-layout-3">
-                                <p class="u-text u-text-default u-text-grey-40 u-text-17">Figma</p>
-                            </div>
-                        </div>
+                {% for order in success_order %}
+<div class="u-expanded-width u-list u-list-1">
+
+    <div class="u-repeater u-repeater-1">
+        <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-1">
+            <div class="u-container-layout u-similar-container u-container-layout-1">
+                <h4 class="u-text u-text-default u-text-6">{{ order.title }}</h4>
+                <p class="u-text u-text-custom-color-1 u-text-default u-text-7">{{order.price}}$</p>
+                <p class="u-text u-text-grey-40 u-text-6" style="text-align: center;">Posted {{ order.date_created }}</p>
+                <p class="u-text u-text-9"> {{ order.description }} </p>
+                <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-1">
+                    <div class="u-container-layout u-container-layout-2">
+                        <p class="u-text u-text-default u-text-grey-40 u-text-10">kjfsd</p>
                     </div>
                 </div>
+                {% if order.counter %}
+                <a href="/order/{{ order.id }}"
+                    class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Accept ({{ order.counter }})</a>
+                {% else %}
+                <a href="/order/{{ order.id }}"
+                    class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Accept</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
+</div>
+
+        {% endfor %}
+        {% endif %}
 
 </section>
 {% endblock %}

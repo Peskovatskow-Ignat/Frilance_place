@@ -12,7 +12,7 @@ import base64
 
 def get_pg_connect():
     """
-    Try executing создан для удобство для того чтобы не запускать через compose
+    Try executing создан для удобства для того чтобы не запускать через compose
     подклчение к созданому контейнеру
     """
 
@@ -57,9 +57,9 @@ def index():
     if 'data' in session:
         data = session['data']
         print(data['roll'])
+        conn = get_pg_connect()
+        cur = conn.cursor()
         try:
-            conn = get_pg_connect()
-            cur = conn.cursor()
 
             if data.get('roll') == 'customer':
                 cur.execute(
@@ -295,7 +295,7 @@ def sign_up():
             if email in existing_emails:
                 conn.close()
                 flash(f'Пользователь с почтой {email} уже зарегистрирован')
-                return redirect('/')
+                return redirect('/signup')
 
             cur.execute(
                 f"""INSERT INTO {roll} (username, email, password, first_name, last_name) VALUES (%s, %s, %s, %s, %s)""",
@@ -490,7 +490,6 @@ def profile_customer():
                         SELECT o.id as order_id, COUNT(*) as comment_num
                         FROM executor_to_order eto
                         JOIN orders o ON eto.order_id = o.id
-                        where eto.status = True
                         group by o.id
                         )
                         SELECT
@@ -508,7 +507,7 @@ def profile_customer():
                                 WHERE o.id = eto.order_id
                             ) AS counter
                         FROM orders o
-                        WHERE o.customer_id = %s;""",
+                        WHERE o.customer_id = %s and o.status;""",
                         (str(data['id']))
                         )
             active_orders_list = []
@@ -533,7 +532,6 @@ def profile_customer():
                         SELECT o.id as order_id, COUNT(*) as comment_num
                         FROM executor_to_order eto
                         JOIN orders o ON eto.order_id = o.id
-                        where eto.status = False
                         group by o.id
                         )
                         SELECT
@@ -551,7 +549,7 @@ def profile_customer():
                                 WHERE o.id = eto.order_id
                             ) AS counter
                         FROM orders o
-                        WHERE o.customer_id = %s;""",
+                        WHERE o.customer_id = %s and o.status = false;""",
                         (str(data['id']))
                         )
             success_order_list = []
@@ -571,6 +569,7 @@ def profile_customer():
                     'status': status,
                     'counter': counter
                 })
+            print(success_order_list) if success_order_list else print(123)
             return render_template('customer/profile.html', user=user_data, active_orders=active_orders_list,
                                    success_order=success_order_list)
         except Exception as ex:
@@ -610,7 +609,6 @@ def profile_customer_search(id):
                         SELECT o.id as order_id, COUNT(*) as comment_num
                         FROM executor_to_order eto
                         JOIN orders o ON eto.order_id = o.id
-                        where eto.status = True
                         group by o.id
                         )
                         SELECT
@@ -649,8 +647,7 @@ def profile_customer_search(id):
                 'counter': counter
             })
 
-        return render_template('customer/profile_search.html', user=customer_dict, orders=orders_list,
-                               customer_id=int(id), id=int(str(data['id'])), roll=data['roll'])
+        return render_template('customer/profile_search.html', user=customer_dict, orders=orders_list, )
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
@@ -820,10 +817,10 @@ def add_order(id):
 join customer c on c.id = o.customer_id 
 where o.id = %s""", (id,))
         customer_email = cur.fetchone()[0]
-        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
-                      recipients=[customer_email])
-        msg.html = render_template('email_orders_add.html', email=email_executor)
-        mail.send(msg)
+        # msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+        #               recipients=[customer_email])
+        # msg.html = render_template('email_orders_add.html', email=email_executor)
+        # mail.send(msg)
         cur.execute("""
                 INSERT INTO executor_to_order (order_id, executor_id)
                 VALUES (%s, %s)""", (id, str(data['id'])))
@@ -831,7 +828,6 @@ where o.id = %s""", (id,))
         flash("Спасибо большое за обраную связь, мы обязательно с вами свяжемся!!!")
         return redirect('/profile_executor')
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
         return redirect('/')
@@ -854,11 +850,12 @@ def reset_password():
             msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com', recipients=[email])
             msg.html = render_template('email_reset_password.html', hash=session.get('token')['token'])
             mail.send(msg)
+            return redirect('/')
         except Exception as ex:
-            flash("Пользователя с почтой %s не существует", email)
+            flash(f"Пользователя с почтой {email} не существует")
             conn.rollback()
             conn.close()
-            return redirect('/')
+            return redirect('/reset_password')
 
     return render_template('reset_password.html')
 
