@@ -378,11 +378,12 @@ def profile_executor():
         data = session.get('data')
         conn = get_pg_connect()
         cur = conn.cursor()
+        executor_id = session.get('data')['id']
         try:
             cur.execute(
-                """SELECT username, email, first_name, last_name, rating, specialty from executor 
-WHERE id = %s""",
-                (str(data['id'])))
+                """SELECT username, email, first_name, last_name, rating, specialty, id from executor
+    WHERE id = %s""",
+                (executor_id,))
             result = cur.fetchone()
             user_data = {
                 'username': result[0],
@@ -390,28 +391,53 @@ WHERE id = %s""",
                 'first_name': result[2],
                 'last_name': result[3],
                 'rating': result[4],
-                'skill': result[5]
+                'skill': result[5],
+                'id': result[6],
             }
             cur.execute(
-                """select title, description, price, date, skill, status from orders where customer_id = %s""",
-                (str(data['id'])))
+                """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
+    join orders o on o.id = eto.order_id 
+    where eto.status = true and o.status = true""",
+                executor_id)
 
-            orders_list = []
+            active_orders_list = []
             for order in cur.fetchall():
-                title, description, price, date_created, skill, status = order
+                id, title, price, description, date_created, skill = order
 
                 formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-                orders_list.append({
+                active_orders_list.append({
+                    'id': id,
                     'title': title,
                     'description': description,
                     'price': price,
                     'date_created': formatted_date,
                     'skill': skill,
-                    'status': status,
                 })
+            cur.execute(
+                """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
+    join orders o on o.id = eto.order_id 
+    where eto.status = true and o.status = false""",
+                executor_id)
 
-            return render_template('executor/profile.html', user=user_data, )
+            success_order_list = []
+            for order in cur.fetchall():
+                id, title, price, description, date_created, skill = order
+
+                formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+
+                success_order_list.append({
+                    'id': id,
+                    'title': title,
+                    'description': description,
+                    'price': price,
+                    'date_created': formatted_date,
+                    'skill': skill,
+                })
+            print(success_order_list)
+
+            return render_template('executor/profile.html', user=user_data, active_orders=active_orders_list,
+                                   success_order=success_order_list)
         except Exception as ex:
             logging.error(ex, exc_info=True)
             conn.rollback()
@@ -426,7 +452,6 @@ def profile_executor_search(id):
     executor_id = id
     conn = get_pg_connect()
     cur = conn.cursor()
-    data = session.get('data')
     try:
         cur.execute(
             """SELECT username, email, first_name, last_name, rating, specialty, id from executor
@@ -474,7 +499,7 @@ where eto.status = true and o.status = false""",
 
             formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-            active_orders_list.append({
+            success_order_list.append({
                 'id': id,
                 'title': title,
                 'description': description,
@@ -482,6 +507,7 @@ where eto.status = true and o.status = false""",
                 'date_created': formatted_date,
                 'skill': skill,
             })
+        print(success_order_list)
 
         return render_template('executor/profile_search.html', active_orders=active_orders_list,
                                success_order=success_order_list, user=user_data, )

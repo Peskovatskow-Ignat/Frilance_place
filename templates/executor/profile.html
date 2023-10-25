@@ -93,75 +93,60 @@
             </div>
         </div>
         {% endif %}
-        <h3 class="u-text u-text-10">Portfolio</h3>
+        {% if active_orders %}
+        <h3 class="u-text u-text-10">Active order</h3>
         <div class="u-border-2 u-border-white u-expanded-width u-line u-line-horizontal u-opacity u-opacity-25 u-line-2"></div>
+        {% for order in active_orders %}
         <div class="u-expanded-width u-list u-list-1">
-            <div class="u-repeater u-repeater-1">
+            <div>
                 <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-1">
                     <div class="u-container-layout u-similar-container u-container-layout-3">
-                        <h4 class="u-text u-text-default u-text-11">Site</h4>
-                        <p class="u-text u-text-custom-color-1 u-text-default u-text-12">600$</p>
-                        <p class="u-text u-text-grey-40 u-text-13">Posted 19 hours ago</p>
-                        <p class="u-text u-text-default u-text-14">Sample text. Click to select the text box. Click
-                            again or double click to start editing the text.&nbsp;Excepteur sint occaecat cupidatat non
-                            proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                        <h4 class="u-text u-text-default u-text-11">{{ order.title }}</h4>
+                        <p class="u-text u-text-custom-color-1 u-text-default u-text-12">{{ order.price }}$</p>
+                        <p class="u-text u-text-grey-40 u-text-13">Posted {{ order.date_created }}</p>
+                        <p class="u-text u-text-default u-text-14">{{ order.description }}
                         <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-3">
                             <div class="u-container-layout u-container-layout-4">
-                                <p class="u-text u-text-default u-text-grey-40 u-text-15">Figma</p>
-                            </div>
-                        </div>
-                        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-4">
-                            <div class="u-container-layout u-valign-middle u-container-layout-5">
-                                <p class="u-text u-text-default u-text-grey-40 u-text-16">PH</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-2">
-                    <div class="u-container-layout u-similar-container u-container-layout-6">
-                        <h4 class="u-text u-text-default u-text-17">Site</h4>
-                        <p class="u-text u-text-custom-color-1 u-text-default u-text-18">600$</p>
-                        <p class="u-text u-text-grey-40 u-text-19">Posted 19 hours ago</p>
-                        <p class="u-text u-text-default u-text-20">Sample text. Click to select the text box. Click
-                            again or double click to start editing the text.&nbsp;Excepteur sint occaecat cupidatat non
-                            proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-                        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-5">
-                            <div class="u-container-layout u-container-layout-7">
-                                <p class="u-text u-text-default u-text-grey-40 u-text-21">Figma</p>
-                            </div>
-                        </div>
-                        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-6">
-                            <div class="u-container-layout u-valign-middle u-container-layout-8">
-                                <p class="u-text u-text-default u-text-grey-40 u-text-22">PH</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-3">
-                    <div class="u-container-layout u-similar-container u-container-layout-9">
-                        <h4 class="u-text u-text-default u-text-23">Site</h4>
-                        <p class="u-text u-text-custom-color-1 u-text-default u-text-24">600$</p>
-                        <p class="u-text u-text-grey-40 u-text-25">Posted 19 hours ago</p>
-                        <p class="u-text u-text-default u-text-26">Sample text. Click to select the text box. Click
-                            again or double click to start editing the text.&nbsp;Excepteur sint occaecat cupidatat non
-                            proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-                        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-7">
-                            <div class="u-container-layout u-container-layout-10">
-                                <p class="u-text u-text-default u-text-grey-40 u-text-27">Figma</p>
-                            </div>
-                        </div>
-                        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-8">
-                            <div class="u-container-layout u-valign-middle u-container-layout-11">
-                                <p class="u-text u-text-default u-text-grey-40 u-text-28">PH</p>
+                                <p class="u-text u-text-default u-text-grey-40 u-text-15">{{ order.skill }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <a href="https://nicepage.com/k/yoga-html-templates"
-           class="u-align-center u-border-none u-btn u-button-style u-custom-color-2 u-hover-feature u-hover-white u-text-body-alt-color u-text-hover-black u-btn-1">More
-            works</a>
+        {% endfor %}
+        <a href="{{ url_for('index') }}"
+           class="u-align-center u-border-none u-btn u-button-style u-custom-color-2 u-hover-feature u-hover-white u-text-body-alt-color u-text-hover-black u-btn-1">Redirect
+            Main page
+        </a>
+        {% endif %}
+        {% if success_order %}
+        <h3 class="u-text u-text-10">Portfolio</h3>
+        <div class="u-border-2 u-border-white u-expanded-width u-line u-line-horizontal u-opacity u-opacity-25 u-line-2"></div>
+        {% for order in success_order %}
+        <div class="u-expanded-width u-list u-list-1">
+            <div>
+                <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-1">
+                    <div class="u-container-layout u-similar-container u-container-layout-3">
+                        <h4 class="u-text u-text-default u-text-11">{{ order.title }}</h4>
+                        <p class="u-text u-text-custom-color-1 u-text-default u-text-12">{{ order.price }}$</p>
+                        <p class="u-text u-text-grey-40 u-text-13">Posted {{ order.date_created }}</p>
+                        <p class="u-text u-text-default u-text-14">{{ order.description }}
+                        <div class="u-border-2 u-border-grey-30 u-container-style u-group u-radius-10 u-shape-round u-group-3">
+                            <div class="u-container-layout u-container-layout-4">
+                                <p class="u-text u-text-default u-text-grey-40 u-text-15">{{ order.skill }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <a href="{{ url_for('index') }}"
+           class="u-align-center u-border-none u-btn u-button-style u-custom-color-2 u-hover-feature u-hover-white u-text-body-alt-color u-text-hover-black u-btn-1">Redirect
+            Main page
+        </a>
+        {% endif %}
     </div>
 
     {% endblock %}
