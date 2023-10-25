@@ -184,7 +184,7 @@ def orders():
     cur = conn.cursor()
     try:
         cur.execute(
-            """SELECT id, title, description, price, date, customer_id, skill, status FROM orders""")
+            """SELECT id, title, description, price, date, customer_id, skill, status FROM orders where status""")
 
         orders_list = []
         for order in cur.fetchall():
@@ -271,6 +271,7 @@ def sign_in():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def sign_up():
+    session.pop('data', None)
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
@@ -422,6 +423,7 @@ WHERE id = %s""",
 
 @app.route('/profile_executor_search/<id>', methods=['GET', 'POST'])
 def profile_executor_search(id):
+    executor_id = id
     conn = get_pg_connect()
     cur = conn.cursor()
     data = session.get('data')
@@ -440,27 +442,49 @@ WHERE id = %s""",
             'skill': result[5],
             'id': result[6],
         }
-        # cur.execute(
-        #     """select title, description, price, date, skill, status from orders where customer_id = %s""",
-        #     (str(data['id'])))
-        #
-        # orders_list = []
-        # for order in cur.fetchall():
-        #     title, description, price, date_created, skill, status = order
-        #
-        #     formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
-        #
-        #     orders_list.append({
-        #         'title': title,
-        #         'description': description,
-        #         'price': price,
-        #         'date_created': formatted_date,
-        #         'skill': skill,
-        #         'status': status,
-        #     })
+        cur.execute(
+            """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
+join orders o on o.id = eto.order_id 
+where eto.status = true and o.status = true""",
+            executor_id)
 
-        return render_template('executor/profile_search.html', user=user_data, executor_id=int(id),
-                               id=int(str(data['id'])), roll=str(data['roll']))
+        active_orders_list = []
+        for order in cur.fetchall():
+            id, title, price, description, date_created, skill = order
+
+            formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+
+            active_orders_list.append({
+                'id': id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'date_created': formatted_date,
+                'skill': skill,
+            })
+        cur.execute(
+            """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
+join orders o on o.id = eto.order_id 
+where eto.status = true and o.status = false""",
+            executor_id)
+
+        success_order_list = []
+        for order in cur.fetchall():
+            id, title, price, description, date_created, skill = order
+
+            formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+
+            active_orders_list.append({
+                'id': id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'date_created': formatted_date,
+                'skill': skill,
+            })
+
+        return render_template('executor/profile_search.html', active_orders=active_orders_list,
+                               success_order=success_order_list, user=user_data, )
     except Exception as ex:
         logging.error(ex, exc_info=True)
         conn.rollback()
@@ -590,6 +614,7 @@ def del_session():
 @app.route('/profile_customer_search/<id>')
 def profile_customer_search(id):
     print(id)
+    customers_id = id
     conn = get_pg_connect()
     cur = conn.cursor()
     data = session.get('data')
@@ -627,15 +652,56 @@ def profile_customer_search(id):
                             ) AS counter
                         FROM orders o
                         WHERE o.customer_id = %s;""",
-                    (int(id),)
+                    (int(customers_id),)
                     )
-        orders_list = []
+        active_orders_list = []
         for order in cur.fetchall():
             id, title, description, price, date_created, customer_id, skill, status, counter = order
             # Format the date as 'dd-mm-yyyy'
             formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-            orders_list.append({
+            active_orders_list.append({
+                'id': id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'date_created': formatted_date,
+                'customer_id': customer_id,
+                'skill': skill,
+                'status': status,
+                'counter': counter
+            })
+        cur.execute("""with test as (
+                    SELECT o.id as order_id, COUNT(*) as comment_num
+                    FROM executor_to_order eto
+                    JOIN orders o ON eto.order_id = o.id
+                    group by o.id
+                    )
+                    SELECT
+                        o.id as order_id,
+                        o.title,
+                        o.description,
+                        o.price,
+                        o.date,
+                        o.customer_id,
+                        o.skill,
+                        o.status,
+                        (
+                            SELECT comment_num
+                            FROM test eto
+                            WHERE o.id = eto.order_id
+                        ) AS counter
+                    FROM orders o
+                    WHERE o.customer_id = %s and o.status = false;""",
+                    customers_id
+                    )
+        success_order_list = []
+        for order in cur.fetchall():
+            id, title, description, price, date_created, customer_id, skill, status, counter = order
+            # Format the date as 'dd-mm-yyyy'
+            formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+
+            success_order_list.append({
                 'id': id,
                 'title': title,
                 'description': description,
@@ -647,7 +713,8 @@ def profile_customer_search(id):
                 'counter': counter
             })
 
-        return render_template('customer/profile_search.html', user=customer_dict, orders=orders_list, )
+        return render_template('customer/profile_search.html', user=customer_dict, active_orders=active_orders_list,
+                               success_order=success_order_list)
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
@@ -791,7 +858,6 @@ def new_orders():
                         (title, price, description, full_description, str(data['id'])))
             conn.commit()
             return redirect('/profile_customer')
-
         except Exception as ex:
             logging.error(ex, exc_info=True)
             conn.rollback()
@@ -893,7 +959,21 @@ def del_session_token():
     return redirect('/')
 
 
+@app.route('/tests')
+def test():
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    cur.execute("select id, title, price from orders")
+    lists = []
+    for order in cur.fetchall():
+        id, title, price = order
+        lists.append({
+            'id': id,
+            'title': title,
+            'price': price
+        })
+    return lists
+
+
 if __name__ == '__main__':
-    # with app.app_context():
-    #     db.create_all()
     app.run(debug=True)
