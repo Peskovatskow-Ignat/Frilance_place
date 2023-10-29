@@ -5,6 +5,8 @@ import hashlib
 
 from flask import render_template, redirect, session, flash, Flask, request, logging
 from flask_mail import Mail, Message
+from psycopg2.sql import SQL, Literal
+
 from functions import resize_and_convert_to_jpg, profile_photo, generate_secure_string
 from datetime import datetime, timedelta
 import base64
@@ -397,8 +399,8 @@ def profile_executor():
             cur.execute(
                 """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
     join orders o on o.id = eto.order_id 
-    where eto.status = true and o.status = true""",
-                executor_id)
+    where executor_id = %s and o.status = true""",
+                str(executor_id))
 
             active_orders_list = []
             for order in cur.fetchall():
@@ -417,8 +419,8 @@ def profile_executor():
             cur.execute(
                 """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
     join orders o on o.id = eto.order_id 
-    where eto.status = true and o.status = false""",
-                executor_id)
+    where executor_id = %s and o.status = false""",
+                str(executor_id))
 
             success_order_list = []
             for order in cur.fetchall():
@@ -977,6 +979,40 @@ def reset(token):
                 return redirect('/signup')
         return render_template('reset_passwd_submit.html')
     return redirect('/')
+
+
+@app.route('/search_orders', methods=['GET', 'POST'])
+def search_orders():
+    title = request.args.get('title')
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    print(title)
+    try:
+        cur.execute(SQL(
+            f"""SELECT id, title, description, price, date, customer_id, skill, status FROM orders
+             where status and levenshtein('{title}', title) <= 2""").format(title=Literal(title)))
+
+        orders_list = []
+        for order in cur.fetchall():
+            id, title, description, price, date_created, customer_id, skill, status = order
+            formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+            orders_list.append({
+                'id': id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'date_created': formatted_date,
+                'customer_id': customer_id,
+                'skill': skill,
+                'status': status,
+            })
+        return render_template('orders.html', orders=orders_list)
+    except Exception as ex:
+        logging.error(ex, exc_info=True)
+        print(ex)
+        conn.rollback()
+        conn.close()
+        return redirect('/')
 
 
 @app.route('/del_session_token')
