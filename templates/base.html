@@ -51,7 +51,7 @@
                     </li>
                     <li class="u-nav-item"><a
                             class="u-active-custom-color-2 u-border-2 u-border-active-custom-color-2 u-button-style u-hover-palette-1-light-1 u-nav-link u-radius-9 u-text-active-white u-text-hover-white u-text-white"
-                            href="{{url_for('index')}}" style="padding: 10px 20px;">Executors</a>
+                            href="{{url_for('index')}}" style="padding: 10px 20px;">Добавлю позже</a>
                     </li>
                 </ul>
                 <div class="u-custom-menu u-nav-container-collapse">
@@ -139,7 +139,7 @@
                     </li>
                     <li class="u-nav-item"><a
                             class="u-active-custom-color-2 u-border-2 u-border-active-custom-color-2 u-button-style u-hover-palette-1-light-1 u-nav-link u-radius-9 u-text-active-white u-text-hover-white u-text-white"
-                            href="{{url_for('index')}}" style="padding: 10px 20px;">Executors</a>
+                            href="{{url_for('del_session')}}" style="padding: 10px 20px;">Добавлю позже</a>
                     </li>
                 </ul>
             </div>
@@ -218,11 +218,11 @@
             </div>
             <div class="u-custom-menu u-nav-container">
                 <ul class="u-nav u-unstyled">
-                    <li class="u-nav-item"><a class="u-button-style u-nav-link" href="templates/Main.html">Main</a>
+                    <li class="u-nav-item"><a class="u-button-style u-nav-link" href="{{ url_for('index') }}">Main</a>
                     </li>
-                    <li class="u-nav-item"><a class="u-button-style u-nav-link" href="Articles.html">Articles</a>
+                    <li class="u-nav-item"><a class="u-button-style u-nav-link" href="{{ url_for('orders') }}">Orders</a>
                     </li>
-                    <li class="u-nav-item"><a class="u-button-style u-nav-link" href="Authors.html">Authors</a>
+                    <li class="u-nav-item"><a class="u-button-style u-nav-link" href="{{ url_for('index') }}">Добавлю позже</a>
                     </li>
                 </ul>
             </div>
@@ -232,12 +232,12 @@
                         <div class="u-menu-close"></div>
                         <ul class="u-align-center u-nav u-popupmenu-items u-unstyled u-nav-2">
                             <li class="u-nav-item"><a class="u-button-style u-nav-link"
-                                                      href="templates/Main.html">Main</a>
+                                                      href="{{ url_for('index') }}">Main</a>
                             </li>
                             <li class="u-nav-item"><a class="u-button-style u-nav-link"
-                                                      href="Articles.html">Articles</a>
+                                                      href="{{ url_for('orders') }}">Orders</a>
                             </li>
-                            <li class="u-nav-item"><a class="u-button-style u-nav-link" href="Authors.html">Authors</a>
+                            <li class="u-nav-item"><a class="u-button-style u-nav-link" href="{{ url_for('index') }}">Authors</a>
                             </li>
                         </ul>
                     </div>

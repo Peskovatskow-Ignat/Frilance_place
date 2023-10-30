@@ -14,7 +14,7 @@ import base64
 
 def get_pg_connect():
     """
-    Try executing создан для удобства для того чтобы не запускать через compose
+    Try - executing создан для удобства для того чтобы не запускать через compose
     подключение к созданному контейнеру
     """
 
@@ -88,9 +88,9 @@ def orders_skill(skill):
     conn = get_pg_connect()
     cur = conn.cursor()
     try:
-        cur.execute(
-            """SELECT id, title, description, price, date, customer_id, skill, status FROM orders where skill = %s and status = %s""",
-            (skill, True))
+        cur.execute(SQL(
+            """SELECT id, title, description, price, date, customer_id, skill, status FROM orders
+             where skill = {skill} and status = true""").format(skill=Literal(skill)))
 
         orders_list = []
         for order in cur.fetchall():
@@ -106,10 +106,8 @@ def orders_skill(skill):
                 'skill': skill,
                 'status': status,
             })
-        cur.execute("""SELECT count(*) FROM orders where skill = %s and status = %s""",
-                    (skill, True))
 
-        return render_template('orders.html', orders=orders_list, count=cur.fetchone()[0])
+        return render_template('orders.html', orders=orders_list, count=len(orders_list))
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
@@ -122,7 +120,7 @@ def orders_skill(skill):
 def order(id):
     conn = get_pg_connect()
     cur = conn.cursor()
-    customer_id = id
+    order_id = id
     if session.get('data') and session.get('data')['roll'] == 'customer':
         req = 'and c.id = {data}'.format(data=session.get("data")['id'])
         print(req)
@@ -136,39 +134,42 @@ def order(id):
 join customer c on o.customer_id = c.id 
 WHERE o.id = %s""", (id,))
         result = cur.fetchone()
-        formatted_date = datetime.strftime(result[4], '%d-%m-%Y')
-        order_dict = {
-            'id': result[0],
-            'title': result[1],
-            'price': result[2],
-            'rating': result[3],
-            'date_created': formatted_date,
-            'data_reg': result[5],
-            'full_description': result[6],
-            'skill': result[7],
-            'username': result[8],
-        }
-        cur.execute("""select e.id, e.email, e.username, e.last_name, e.first_name, eto.data from executor_to_order eto
-join executor e on e.id = eto.executor_id 
-join orders o on o.id = eto.order_id 
-join customer c on c.id = o.customer_id 
-where o.id = %s {req}""".format(req=req), (id,))
-        users_dict = []
-        for user in cur.fetchall():
-            id, email, username, last_name, first_name, data = user
-            formatted_date = datetime.strftime(data, '%d-%m-%Y')
-            users_dict.append({
-                'id': id,
-                'email': email,
-                'username': username,
-                'last_name': last_name,
-                'first_name': last_name,
-                'data': formatted_date
-            })
-        cur.execute("""select c.id from customer c
-            join orders o on o.customer_id = c.id
-            where o.id = %s""", customer_id)
-        return render_template('order.html', order=order_dict, users=users_dict, customer=cur.fetchone()[0])
+        if result:
+            formatted_date = datetime.strftime(result[4], '%d-%m-%Y') if result is not None else None
+            order_dict = {
+                'id': result[0],
+                'title': result[1],
+                'price': result[2],
+                'rating': result[3],
+                'date_created': formatted_date,
+                'data_reg': result[5],
+                'full_description': result[6],
+                'skill': result[7],
+                'username': result[8],
+            }
+            cur.execute("""select e.id, e.email, e.username, e.last_name, e.first_name, eto.data from executor_to_order eto
+            join executor e on e.id = eto.executor_id 
+            join orders o on o.id = eto.order_id 
+            join customer c on c.id = o.customer_id 
+            where o.id = %s {req}""".format(req=req), (id,))
+            users_dict = []
+            for user in cur.fetchall():
+                executor_id, email, username, last_name, first_name, data = user
+                formatted_date = datetime.strftime(result[4], '%d-%m-%Y') if result is not None else None
+
+                users_dict.append({
+                    'executor_id': id,
+                    'email': email,
+                    'username': username,
+                    'last_name': last_name,
+                    'first_name': last_name,
+                    'data': formatted_date
+                })
+            cur.execute("""select c.id from customer c
+                join orders o on o.customer_id = c.id
+                where o.id = %s""", order_id)
+            return render_template('order.html', order=order_dict, users=users_dict, customer=cur.fetchone()[0],
+                               order_id=order_id)
     except Exception as ex:
         logging.error(ex, exc_info=True)
         conn.rollback()
@@ -205,9 +206,8 @@ def orders():
                 'skill': skill,
                 'status': status,
             })
-        cur.execute("""SELECT count(*) FROM orders""")
 
-        return render_template('orders.html', orders=orders_list, count=cur.fetchone()[0])
+        return render_template('orders.html', orders=orders_list, count=len(orders_list))
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
@@ -275,18 +275,21 @@ def sign_in():
 def sign_up():
     session.pop('data', None)
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
+
         password = request.form.get('password')
-        last_name = request.form.get('last_name')
-        first_name = request.form.get('first_name')
         sub_password = request.form.get('sub_password')
 
         if password != sub_password:
+            flash("Пароли не совпадают")
             return render_template('sign_up.html')
 
-        password_hash = hashlib.sha224(password.encode()).hexdigest()
+        username = request.form.get('username')
+        email = request.form.get('email')
+        last_name = request.form.get('last_name')
+        first_name = request.form.get('first_name')
         roll = request.form.get('roll')
+
+        password_hash = hashlib.sha224(password.encode()).hexdigest()
 
         conn = get_pg_connect()
         cur = conn.cursor()
@@ -399,7 +402,7 @@ def profile_executor():
             cur.execute(
                 """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
     join orders o on o.id = eto.order_id 
-    where executor_id = %s and o.status = true""",
+    where executor_id = %s and o.status = true and eto.status = true""",
                 str(executor_id))
 
             active_orders_list = []
@@ -419,7 +422,7 @@ def profile_executor():
             cur.execute(
                 """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
     join orders o on o.id = eto.order_id 
-    where executor_id = %s and o.status = false""",
+    where executor_id = %s and o.status = false and eto.status = true""",
                 str(executor_id))
 
             success_order_list = []
@@ -472,8 +475,8 @@ WHERE id = %s""",
         cur.execute(
             """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
 join orders o on o.id = eto.order_id 
-where eto.status = true and o.status = true""",
-            executor_id)
+where eto.status = true and o.status = true and eto.executor_id = %s""",
+            str(executor_id))
 
         active_orders_list = []
         for order in cur.fetchall():
@@ -785,6 +788,7 @@ def profile_executor_edit():
             last_name = request.form.get('last_name')
             first_name = request.form.get('first_name')
             skill = request.form.get('skill')
+            print(skill)
             cur.execute("""
                 UPDATE executor
                 SET username = %s, last_name = %s, first_name = %s, specialty = %s, email = %s
@@ -877,13 +881,14 @@ def new_orders():
         price = request.form.get('price')
         description = request.form.get('descriptions')
         full_description = request.form.get('full_descriptions')
+        skill = request.form.get('skill')
         data = session.get('data')
         conn = get_pg_connect()
         cur = conn.cursor()
         try:
-            cur.execute("""INSERT INTO orders (title, price, description, full_description, customer_id)
-                           VALUES (%s, %s, %s, %s, %s)""",
-                        (title, price, description, full_description, str(data['id'])))
+            cur.execute("""INSERT INTO orders (title, price, description, full_description, customer_id, skill)
+                           VALUES (%s, %s, %s, %s, %s, %s)""",
+                        (title, price, description, full_description, str(data['id']), skill))
             conn.commit()
             return redirect('/profile_customer')
         except Exception as ex:
@@ -989,8 +994,8 @@ def search_orders():
     print(title)
     try:
         cur.execute(SQL(
-            f"""SELECT id, title, description, price, date, customer_id, skill, status FROM orders
-             where status and levenshtein('{title}', title) <= 2""").format(title=Literal(title)))
+            """SELECT id, title, description, price, date, customer_id, skill, status FROM orders
+             where status and levenshtein({title}, title) <= 6""").format(title=Literal(title)))
 
         orders_list = []
         for order in cur.fetchall():
@@ -1006,7 +1011,8 @@ def search_orders():
                 'skill': skill,
                 'status': status,
             })
-        return render_template('orders.html', orders=orders_list)
+
+        return render_template('orders.html', orders=orders_list, count=len(orders_list))
     except Exception as ex:
         logging.error(ex, exc_info=True)
         print(ex)
@@ -1035,6 +1041,20 @@ def test():
             'price': price
         })
     return lists
+
+
+@app.route('/submit_order/<order_id>/<executor_id>')
+def submit_order(order_id, executor_id):
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    try:
+        cur.execute("select id, title, price from executor_to_order eto ")
+    except Exception as ex:
+        logging.error(ex, exc_info=True)
+        print(ex)
+        conn.rollback()
+        conn.close()
+        return redirect('/')
 
 
 if __name__ == '__main__':
