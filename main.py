@@ -40,8 +40,6 @@ def get_pg_connect():
 
 app = Flask(__name__)
 
-app.permanent_session_lifetime = timedelta(minutes=5)
-
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["JSON_AS_ASCII"] = True
 app.config["MAIL_SERVER"] = 'smtp.gmail.com'
@@ -64,11 +62,11 @@ def index():
         try:
 
             if data.get('roll') == 'customer':
-                cur.execute(
-                    f"""SELECT username FROM {data.get('roll')} WHERE id = %s""", (str(data['id'])))
+                cur.execute(SQL(
+                    """SELECT username FROM customer WHERE id = {id}""").format(id=Literal(data['id'])))
             else:
-                cur.execute(
-                    f"""SELECT username FROM {data.get('roll')} WHERE id = %s""", (str(data['id'])))
+                cur.execute(SQL(
+                    """SELECT username FROM executor WHERE id = {id}""").format(id=Literal(data['id'])))
 
             username = cur.fetchone()[0] if cur.rowcount > 0 else None
             conn.close()
@@ -169,7 +167,7 @@ WHERE o.id = %s""", (id,))
                 join orders o on o.customer_id = c.id
                 where o.id = %s""", order_id)
             return render_template('order.html', order=order_dict, users=users_dict, customer=cur.fetchone()[0],
-                               order_id=order_id)
+                                   order_id=order_id)
     except Exception as ex:
         logging.error(ex, exc_info=True)
         conn.rollback()
@@ -232,7 +230,6 @@ def sign_in():
 
             conn = get_pg_connect()
             cur = conn.cursor()
-
             try:
                 if roll != 'customer':
                     cur.execute(
@@ -1048,13 +1045,39 @@ def submit_order(order_id, executor_id):
     conn = get_pg_connect()
     cur = conn.cursor()
     try:
-        cur.execute("select id, title, price from executor_to_order eto ")
+        cur.execute(SQL("""
+        update executor_to_order set status = true  
+        where executor_id = {executor_id} and order_id = {order_id}
+        """).format(executor_id=Literal(executor_id), order_id=Literal(order_id)))
+        conn.commit()
+
     except Exception as ex:
         logging.error(ex, exc_info=True)
         print(ex)
         conn.rollback()
         conn.close()
         return redirect('/')
+
+
+@app.route('/refuse_order/<order_id>/<executor_id>')
+def refuse_order(order_id, executor_id):
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    try:
+        cur.execute(SQL("""
+        delete from executor_to_order
+        where executor_id = {executor_id} and order_id = {order_id}
+        """).format(executor_id=Literal(executor_id), order_id=Literal(order_id)))
+        conn.commit()
+
+    except Exception as ex:
+        logging.error(ex, exc_info=True)
+        print(ex)
+        conn.rollback()
+        conn.close()
+        return redirect('/')
+
+
 
 
 if __name__ == '__main__':
