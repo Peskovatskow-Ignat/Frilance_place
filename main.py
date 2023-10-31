@@ -317,67 +317,9 @@ def sign_up():
     return render_template('sign_up.html')
 
 
-@app.route('/p', methods=['GET', 'POST'])
-def p():
-    if request.method == 'POST':
-        photo = request.files['photo']
-
-        if photo:
-            photo_data = photo.read()
-            conn = get_pg_connect()
-
-            cursor = conn.cursor()
-            try:
-                jpg_data = resize_and_convert_to_jpg(photo_data)
-
-                cursor.execute(
-                    "UPDATE articles SET photo_data = %s WHERE id = 3",
-                    (jpg_data,)
-                )
-
-                conn.commit()
-                conn.close()
-            except Exception as ex:
-                logging.error(ex, exc_info=True)
-                conn.rollback()
-                conn.close()
-                return f"Error:"
-
-    return render_template('photo.html')
-
-
-@app.route('/pp', methods=['GET', 'POST'])
-def pp():
-    if request.method == 'POST':
-        photo = request.files['photo']
-
-        if photo:
-            photo_data = photo.read()
-            conn = get_pg_connect()
-            cursor = conn.cursor()
-            try:
-                jpg_data = profile_photo(photo_data)
-
-                cursor.execute(
-                    "UPDATE users SET photo = %s WHERE id = 4",
-                    (jpg_data,)
-                )
-
-                conn.commit()
-                conn.close()
-            except Exception as ex:
-                logging.error(ex, exc_info=True)
-                conn.rollback()
-                conn.close()
-                return f"Error:"
-
-    return render_template('photo.html')
-
-
 @app.route('/profile_executor', methods=['GET', 'POST'])
 def profile_executor():
     if session.get('data'):
-        data = session.get('data')
         conn = get_pg_connect()
         cur = conn.cursor()
         executor_id = session.get('data')['id']
@@ -520,7 +462,7 @@ where eto.status = true and o.status = false""",
         return render_template('index.html')
 
 
-@app.route('/profile_customer', methods=['GET', 'POST'])
+@app.route('/profile_customer', methods=['GET', ])
 def profile_customer():
     if session.get('data'):
         data = session.get('data')
@@ -751,7 +693,7 @@ def profile_customer_search(id):
         return "Ошибка при получении статей из базы данных"
 
 
-@app.route("/contact", methods=["GET", "POST", ])
+@app.route("/contact", methods=["POST", ])
 def contact():
     if request.method == "POST":
         email = request.form.get("email")
@@ -983,7 +925,7 @@ def reset(token):
     return redirect('/')
 
 
-@app.route('/search_orders', methods=['GET', 'POST'])
+@app.route('/search_orders', methods=['GET', ])
 def search_orders():
     title = request.args.get('title')
     conn = get_pg_connect()
@@ -1076,8 +1018,6 @@ def refuse_order(order_id, executor_id):
         conn.rollback()
         conn.close()
         return redirect('/')
-
-
 
 
 if __name__ == '__main__':
