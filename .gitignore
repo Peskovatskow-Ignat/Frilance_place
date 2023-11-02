@@ -6,3 +6,4 @@
 >>>>>>> 8aacc48 (fixed compose)
 *.env
 *__pycache__*
+*.coverage*

@@ -49,10 +49,17 @@
                             class="u-active-custom-color-2 u-border-2 u-border-active-custom-color-2 u-button-style u-hover-palette-1-light-1 u-nav-link u-radius-9 u-text-active-white u-text-hover-white u-text-white"
                             href="{{url_for('orders')}}" style="padding: 10px 20px;">Orders</a>
                     </li>
+                    {% if session['data'].roll == 'customer' %}
                     <li class="u-nav-item"><a
                             class="u-active-custom-color-2 u-border-2 u-border-active-custom-color-2 u-button-style u-hover-palette-1-light-1 u-nav-link u-radius-9 u-text-active-white u-text-hover-white u-text-white"
-                            href="{{url_for('index')}}" style="padding: 10px 20px;">Добавлю позже</a>
+                            href="{{url_for('index')}}" style="padding: 10px 20px;">Active executor</a>
                     </li>
+                    {% elif session['data'].roll == 'executor' %}
+                                        <li class="u-nav-item"><a
+                            class="u-active-custom-color-2 u-border-2 u-border-active-custom-color-2 u-button-style u-hover-palette-1-light-1 u-nav-link u-radius-9 u-text-active-white u-text-hover-white u-text-white"
+                            href="{{url_for('index')}}" style="padding: 10px 20px;">Orders for me</a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <div class="u-custom-menu u-nav-container-collapse">
                     <div class="u-black u-container-style u-inner-container-layout u-opacity u-opacity-95 u-sidenav">
@@ -136,10 +143,6 @@
                     <li class="u-nav-item"><a
                             class="u-active-custom-color-2 u-border-2 u-border-active-custom-color-2 u-button-style u-hover-palette-1-light-1 u-nav-link u-radius-9 u-text-active-white u-text-hover-white u-text-white"
                             href="{{url_for('orders')}}" style="padding: 10px 20px;">Orders</a>
-                    </li>
-                    <li class="u-nav-item"><a
-                            class="u-active-custom-color-2 u-border-2 u-border-active-custom-color-2 u-button-style u-hover-palette-1-light-1 u-nav-link u-radius-9 u-text-active-white u-text-hover-white u-text-white"
-                            href="{{url_for('del_session')}}" style="padding: 10px 20px;">Добавлю позже</a>
                     </li>
                 </ul>
             </div>

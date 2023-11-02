@@ -7,8 +7,8 @@ from flask import render_template, redirect, session, flash, Flask, request, log
 from flask_mail import Mail, Message
 from psycopg2.sql import SQL, Literal
 
-from functions import resize_and_convert_to_jpg, profile_photo, generate_secure_string
-from datetime import datetime, timedelta
+from functions import generate_secure_string
+from datetime import datetime
 import base64
 
 
@@ -52,11 +52,10 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_DEFAULT_SENDER")
 mail = Mail(app)
 
 
-@app.route('/')
+@app.route('/', methods=['GET', ])
 def index():
     if 'data' in session:
         data = session['data']
-        print(data['roll'])
         conn = get_pg_connect()
         cur = conn.cursor()
         try:
@@ -74,14 +73,13 @@ def index():
             return render_template('index.html', username=username)
 
         except Exception as ex:
-            logging.error(ex, exc_info=True)
             conn.rollback()
             conn.close()
-
+            return redirect('/')
     return render_template('index.html')
 
 
-@app.route('/orders/<skill>')
+@app.route('/orders/<skill>', methods=['GET', ])
 def orders_skill(skill):
     conn = get_pg_connect()
     cur = conn.cursor()
@@ -121,7 +119,6 @@ def order(id):
     order_id = id
     if session.get('data') and session.get('data')['roll'] == 'customer':
         req = 'and c.id = {data}'.format(data=session.get("data")['id'])
-        print(req)
     elif session.get('data') and session.get('data')['roll'] == 'executor':
         req = 'and e.id = {data}'.format(data=session.get("data")['id'])
     else:
@@ -179,7 +176,7 @@ WHERE o.id = %s""", (id,))
         conn.close()
 
 
-@app.route('/orders')
+@app.route('/orders', methods=['GET', ])
 def orders():
     conn = get_pg_connect()
     cur = conn.cursor()
@@ -243,7 +240,6 @@ def sign_in():
                         (email,))
 
                 user = cur.fetchone()
-                print(user)
 
                 if user and hashlib.sha224(password.encode()).hexdigest() == user[7]:
                     if user[8]:
@@ -317,7 +313,7 @@ def sign_up():
     return render_template('sign_up.html')
 
 
-@app.route('/profile_executor', methods=['GET', 'POST'])
+@app.route('/profile_executor', methods=['GET', ])
 def profile_executor():
     if session.get('data'):
         conn = get_pg_connect()
@@ -378,7 +374,6 @@ def profile_executor():
                     'date_created': formatted_date,
                     'skill': skill,
                 })
-            print(success_order_list)
 
             return render_template('executor/profile.html', user=user_data, active_orders=active_orders_list,
                                    success_order=success_order_list)
@@ -391,7 +386,7 @@ def profile_executor():
     return render_template('index.html')
 
 
-@app.route('/profile_executor_search/<id>', methods=['GET', 'POST'])
+@app.route('/profile_executor_search/<id>', methods=['GET', ])
 def profile_executor_search(id):
     executor_id = id
     conn = get_pg_connect()
@@ -451,7 +446,6 @@ where eto.status = true and o.status = false""",
                 'date_created': formatted_date,
                 'skill': skill,
             })
-        print(success_order_list)
 
         return render_template('executor/profile_search.html', active_orders=active_orders_list,
                                success_order=success_order_list, user=user_data, )
@@ -563,7 +557,6 @@ def profile_customer():
                     'status': status,
                     'counter': counter
                 })
-            print(success_order_list) if success_order_list else print(123)
             return render_template('customer/profile.html', user=user_data, active_orders=active_orders_list,
                                    success_order=success_order_list)
         except Exception as ex:
@@ -575,15 +568,14 @@ def profile_customer():
     return redirect('/')
 
 
-@app.route('/del_session')
+@app.route('/del_session', methods=['GET'])
 def del_session():
     session.pop('data', None)
     return redirect('/')
 
 
-@app.route('/profile_customer_search/<id>')
+@app.route('/profile_customer_search/<id>', methods=['GET'])
 def profile_customer_search(id):
-    print(id)
     customers_id = id
     conn = get_pg_connect()
     cur = conn.cursor()
@@ -709,7 +701,7 @@ def contact():
         return redirect('/')
 
 
-@app.route('/profile_executor/edit', methods=['POST', "GET", ])
+@app.route('/profile_executor/edit', methods=['POST', "GET"])
 def profile_executor_edit():
     if request.method == 'POST':
         if session.get('data'):
@@ -727,7 +719,6 @@ def profile_executor_edit():
             last_name = request.form.get('last_name')
             first_name = request.form.get('first_name')
             skill = request.form.get('skill')
-            print(skill)
             cur.execute("""
                 UPDATE executor
                 SET username = %s, last_name = %s, first_name = %s, specialty = %s, email = %s
@@ -813,7 +804,7 @@ WHERE id = %s""",
     return redirect('/')
 
 
-@app.route('/customer/add_orders', methods=['POST', 'GET', ])
+@app.route('/customer/add_orders', methods=['POST', 'GET'])
 def new_orders():
     if request.method == 'POST':
         title = request.form.get('title')
@@ -839,7 +830,7 @@ def new_orders():
     return render_template('new_orders.html')
 
 
-@app.route('/add_order/<id>')
+@app.route('/add_order/<id>', methods=['POST', ])
 def add_order(id):
     if not session.get('data'):
         return redirect('/signin')
@@ -849,16 +840,15 @@ def add_order(id):
     try:
         cur.execute('select email from executor where id = %s', (str(data['id'])))
         email_executor = cur.fetchone()[0]
-        print(email_executor)
         cur.execute("""
         select c.email from orders o 
 join customer c on c.id = o.customer_id 
 where o.id = %s""", (id,))
         customer_email = cur.fetchone()[0]
-        # msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
-        #               recipients=[customer_email])
-        # msg.html = render_template('email_orders_add.html', email=email_executor)
-        # mail.send(msg)
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=[customer_email])
+        msg.html = render_template('email_orders_add.html', email=email_executor)
+        mail.send(msg)
         cur.execute("""
                 INSERT INTO executor_to_order (order_id, executor_id)
                 VALUES (%s, %s)""", (id, str(data['id'])))
@@ -954,35 +944,18 @@ def search_orders():
         return render_template('orders.html', orders=orders_list, count=len(orders_list))
     except Exception as ex:
         logging.error(ex, exc_info=True)
-        print(ex)
         conn.rollback()
         conn.close()
         return redirect('/')
 
 
-@app.route('/del_session_token')
+@app.route('/del_session_token', methods=['GET', ])
 def del_session_token():
     session.pop('token', None)
     return redirect('/')
 
 
-@app.route('/tests')
-def test():
-    conn = get_pg_connect()
-    cur = conn.cursor()
-    cur.execute("select id, title, price from orders")
-    lists = []
-    for order in cur.fetchall():
-        id, title, price = order
-        lists.append({
-            'id': id,
-            'title': title,
-            'price': price
-        })
-    return lists
-
-
-@app.route('/submit_order/<order_id>/<executor_id>')
+@app.route('/submit_order/<order_id>/<executor_id>', methods=['POST', ])
 def submit_order(order_id, executor_id):
     conn = get_pg_connect()
     cur = conn.cursor()
@@ -995,13 +968,12 @@ def submit_order(order_id, executor_id):
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
-        print(ex)
         conn.rollback()
         conn.close()
         return redirect('/')
 
 
-@app.route('/refuse_order/<order_id>/<executor_id>')
+@app.route('/refuse_order/<order_id>/<executor_id>', methods=['POST', ])
 def refuse_order(order_id, executor_id):
     conn = get_pg_connect()
     cur = conn.cursor()
@@ -1014,7 +986,6 @@ def refuse_order(order_id, executor_id):
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
-        print(ex)
         conn.rollback()
         conn.close()
         return redirect('/')

@@ -2,7 +2,6 @@ from PIL import Image
 from io import BytesIO
 import secrets
 import string
-from random import random
 
 
 def generate_secure_string(length=50):
