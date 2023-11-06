@@ -3,7 +3,6 @@
 <head>
 
 
-
     <style>
         .block-container {
             margin-bottom: 240px; /* Adjust the value to control the spacing */
@@ -28,9 +27,6 @@
 <body data-path-to-root="./" class="u-body u-xl-mode" data-lang="ru">
 
 
-
-
-
 <section class="u-clearfix u-custom-color-3 u-section-1" id="sec-591d">
     <div class="u-clearfix u-sheet u-sheet-1">
         <div class="custom-expanded u-border-2 u-border-white u-line u-line-vertical u-opacity u-opacity-25 u-line-1"></div>
@@ -47,13 +43,16 @@
             <p class="u-text u-text-default u-text-5">Last Name: {{user.last_name}}</p>
             <p class="u-text u-text-default u-text-6">Email: {{ user.email }}</p>
         </div>
-        <a href="{{ url_for('profile_executor_edit') }}"><span class="u-icon u-icon-1"><svg class="u-svg-link" preserveAspectRatio="xMidYMin slice" viewBox="0 0 54 54"
-                                           style=""><use xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                         xlink:href="#svg-43ea"></use></svg><svg class="u-svg-content"
-                                                                                                 viewBox="0 0 54 54"
-                                                                                                 x="0px" y="0px"
-                                                                                                 id="svg-43ea"
-                                                                                                 style="enable-background:new 0 0 54 54;"><g><path
+        <a href="{{ url_for('profile_executor_edit') }}"><span class="u-icon u-icon-1"><svg class="u-svg-link"
+                                                                                            preserveAspectRatio="xMidYMin slice"
+                                                                                            viewBox="0 0 54 54"
+                                                                                            style=""><use
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                xlink:href="#svg-43ea"></use></svg><svg class="u-svg-content"
+                                                        viewBox="0 0 54 54"
+                                                        x="0px" y="0px"
+                                                        id="svg-43ea"
+                                                        style="enable-background:new 0 0 54 54;"><g><path
                 d="M51.22,21h-5.052c-0.812,0-1.481-0.447-1.792-1.197s-0.153-1.54,0.42-2.114l3.572-3.571
 		c0.525-0.525,0.814-1.224,0.814-1.966c0-0.743-0.289-1.441-0.814-1.967l-4.553-4.553c-1.05-1.05-2.881-1.052-3.933,0l-3.571,3.571
 		c-0.574,0.573-1.366,0.733-2.114,0.421C33.447,9.313,33,8.644,33,7.832V2.78C33,1.247,31.753,0,30.22,0H23.78
@@ -109,7 +108,24 @@
                             <div class="u-container-layout u-container-layout-4">
                                 <p class="u-text u-text-default u-text-grey-40 u-text-15">{{ order.skill }}</p>
                             </div>
+
                         </div>
+                        {% if order.status == 'sent for review' %}
+                        <div style="display: flex; justify-content: right; margin-right: 3%">
+
+                            <h3
+                               style="margin-right: 1%">Отправлено
+                                на проверку</h3>
+                        </div>
+                        {% else %}
+                        <div style="display: flex; justify-content: right; margin-right: 3%">
+
+                            <a href="/send_order_for_review/{{ order.order_id }}/{{ order.executor_id }}"
+                               style="margin-right: 1%"
+                               class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Отправить
+                                на проверку</a>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -136,6 +152,7 @@
                             <div class="u-container-layout u-container-layout-4">
                                 <p class="u-text u-text-default u-text-grey-40 u-text-15">{{ order.skill }}</p>
                             </div>
+
                         </div>
                     </div>
                 </div>

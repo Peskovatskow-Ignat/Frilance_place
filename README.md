@@ -1,8 +1,4 @@
-<!DOCTYPE html>
-<html>
-  <head>
-  </head>
-  <body>
+ <body>
     <h1>Frilance place</h1>
     <h2>Содержание</h2>
     <ul>
@@ -98,5 +94,4 @@
     
     FLASK_PORT - Порт на котором будет работать Flask 
 
-</body>
-</html>
+

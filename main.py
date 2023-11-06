@@ -142,18 +142,19 @@ WHERE o.id = %s""", (id,))
                 'skill': result[7],
                 'username': result[8],
             }
-            cur.execute("""select e.id, e.email, e.username, e.last_name, e.first_name, eto.data from executor_to_order eto
+            cur.execute("""select o.id, e.id, e.email, e.username, e.last_name, e.first_name, eto.data from executor_to_order eto
             join executor e on e.id = eto.executor_id 
             join orders o on o.id = eto.order_id 
             join customer c on c.id = o.customer_id 
-            where o.id = %s {req}""".format(req=req), (id,))
+            where eto.status = 'sent for approval' and  o.id = %s {req}""".format(req=req), (id,))
             users_dict = []
             for user in cur.fetchall():
-                executor_id, email, username, last_name, first_name, data = user
+                id_order, executor_id, email, username, last_name, first_name, data = user
                 formatted_date = datetime.strftime(result[4], '%d-%m-%Y') if result is not None else None
 
                 users_dict.append({
-                    'executor_id': id,
+                    'order_id': id_order,
+                    'executor_id': executor_id,
                     'email': email,
                     'username': username,
                     'last_name': last_name,
@@ -335,39 +336,42 @@ def profile_executor():
                 'id': result[6],
             }
             cur.execute(
-                """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
+                """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill, eto.status from executor_to_order eto 
     join orders o on o.id = eto.order_id 
-    where executor_id = %s and o.status = true and eto.status = true""",
+    where executor_id = %s and o.status = true and (eto.status = 'approved customer' or eto.status = 'sent for review') """,
                 str(executor_id))
 
             active_orders_list = []
             for order in cur.fetchall():
-                id, title, price, description, date_created, skill = order
+                executor_id, order_id, title, price, description, date_created, skill, status = order
 
                 formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
                 active_orders_list.append({
-                    'id': id,
+                    'executor_id': executor_id,
+                    'order_id': order_id,
                     'title': title,
                     'description': description,
                     'price': price,
                     'date_created': formatted_date,
                     'skill': skill,
+                    'status': status
                 })
             cur.execute(
-                """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
+                """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
     join orders o on o.id = eto.order_id 
-    where executor_id = %s and o.status = false and eto.status = true""",
+    where executor_id = %s and o.status = false and eto.status = 'confirmed customer'""",
                 str(executor_id))
 
             success_order_list = []
             for order in cur.fetchall():
-                id, title, price, description, date_created, skill = order
+                executor_id, order_id, title, price, description, date_created, skill = order
 
                 formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
                 success_order_list.append({
-                    'id': id,
+                    'executor_id': executor_id,
+                    'order_id': order_id,
                     'title': title,
                     'description': description,
                     'price': price,
@@ -409,7 +413,7 @@ WHERE id = %s""",
         cur.execute(
             """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
 join orders o on o.id = eto.order_id 
-where eto.status = true and o.status = true and eto.executor_id = %s""",
+where eto.status = 'approved customer' and o.status = true and eto.executor_id = %s""",
             str(executor_id))
 
         active_orders_list = []
@@ -429,7 +433,7 @@ where eto.status = true and o.status = true and eto.executor_id = %s""",
         cur.execute(
             """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
 join orders o on o.id = eto.order_id 
-where eto.status = true and o.status = false""",
+where eto.status = 'approved customer' and o.status = false""",
             executor_id)
 
         success_order_list = []
@@ -478,6 +482,7 @@ def profile_customer():
                         SELECT o.id as order_id, COUNT(*) as comment_num
                         FROM executor_to_order eto
                         JOIN orders o ON eto.order_id = o.id
+                        where eto.status = 'sent for approval'
                         group by o.id
                         )
                         SELECT
@@ -543,7 +548,6 @@ def profile_customer():
             success_order_list = []
             for order in cur.fetchall():
                 id, title, description, price, date_created, customer_id, skill, status, counter = order
-                # Format the date as 'dd-mm-yyyy'
                 formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
                 success_order_list.append({
@@ -579,7 +583,6 @@ def profile_customer_search(id):
     customers_id = id
     conn = get_pg_connect()
     cur = conn.cursor()
-    data = session.get('data')
     try:
         cur.execute(
             """SELECT email, username, last_name, first_name, id from customer WHERE id = %s""", (id,))
@@ -619,7 +622,6 @@ def profile_customer_search(id):
         active_orders_list = []
         for order in cur.fetchall():
             id, title, description, price, date_created, customer_id, skill, status, counter = order
-            # Format the date as 'dd-mm-yyyy'
             formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
             active_orders_list.append({
@@ -660,7 +662,6 @@ def profile_customer_search(id):
         success_order_list = []
         for order in cur.fetchall():
             id, title, description, price, date_created, customer_id, skill, status, counter = order
-            # Format the date as 'dd-mm-yyyy'
             formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
             success_order_list.append({
@@ -830,7 +831,7 @@ def new_orders():
     return render_template('new_orders.html')
 
 
-@app.route('/add_order/<id>', methods=['POST', ])
+@app.route('/add_order/<id>', methods=['POST', 'GET'])
 def add_order(id):
     if not session.get('data'):
         return redirect('/signin')
@@ -924,7 +925,7 @@ def search_orders():
     try:
         cur.execute(SQL(
             """SELECT id, title, description, price, date, customer_id, skill, status FROM orders
-             where status and levenshtein({title}, title) <= 6""").format(title=Literal(title)))
+             where status and levenshtein({title}, title) <= 2""").format(title=Literal(title)))
 
         orders_list = []
         for order in cur.fetchall():
@@ -955,16 +956,19 @@ def del_session_token():
     return redirect('/')
 
 
-@app.route('/submit_order/<order_id>/<executor_id>', methods=['POST', ])
+@app.route('/submit_order/<order_id>/<executor_id>', methods=['POST', 'GET'])
 def submit_order(order_id, executor_id):
+    print(order_id)
+    print(executor_id)
     conn = get_pg_connect()
     cur = conn.cursor()
     try:
         cur.execute(SQL("""
-        update executor_to_order set status = true  
+        update executor_to_order set status = 'approved customer'  
         where executor_id = {executor_id} and order_id = {order_id}
         """).format(executor_id=Literal(executor_id), order_id=Literal(order_id)))
         conn.commit()
+        return redirect('/')
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
@@ -973,7 +977,7 @@ def submit_order(order_id, executor_id):
         return redirect('/')
 
 
-@app.route('/refuse_order/<order_id>/<executor_id>', methods=['POST', ])
+@app.route('/refuse_order/<order_id>/<executor_id>', methods=['POST', 'GET'])
 def refuse_order(order_id, executor_id):
     conn = get_pg_connect()
     cur = conn.cursor()
@@ -983,6 +987,110 @@ def refuse_order(order_id, executor_id):
         where executor_id = {executor_id} and order_id = {order_id}
         """).format(executor_id=Literal(executor_id), order_id=Literal(order_id)))
         conn.commit()
+        return redirect('/')
+    except Exception as ex:
+        logging.error(ex, exc_info=True)
+        conn.rollback()
+        conn.close()
+        return redirect('/')
+
+
+@app.route('/send_order_for_review/<order_id>/<executor_id>', methods=['POST', 'GET', ])
+def send_order_to_confirm(order_id, executor_id):
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    try:
+        cur.execute(SQL("""
+        update executor_to_order set status = 'sent for review'  
+        where executor_id = {executor_id} and order_id = {order_id}
+        """).format(executor_id=Literal(executor_id), order_id=Literal(order_id)))
+
+        conn.commit()
+        return redirect('/')
+    except Exception as ex:
+        logging.error(ex, exc_info=True)
+        conn.rollback()
+        conn.close()
+        return redirect('/')
+
+
+@app.route('/active_executor')
+def active_executor():
+    if not session.get('data'):
+        return redirect('/')
+    if session.get('data')['roll'] != 'customer':
+        return redirect('/')
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    try:
+        cur.execute(SQL("""select o.id, e.id, e.email, e.username, e.last_name, e.first_name, eto.data from executor_to_order eto 
+join orders o on o.id = eto.order_id 
+join executor e on e.id = eto.executor_id 
+join customer c on c.id = o.customer_id 
+where c.id = {customer_id} and eto.status = 'sent for review' """).format(
+            customer_id=Literal(session.get('data')['id'])))
+        users_review = []
+        for user in cur.fetchall():
+            order_id, executor_id, email, username, last_name, first_name, data = user
+            formatted_date = datetime.strftime(data, '%d-%m-%Y') if data is not None else None
+
+            users_review.append({
+                'order_id': order_id,
+                'executor_id': executor_id,
+                'email': email,
+                'username': username,
+                'last_name': last_name,
+                'first_name': last_name,
+                'data': formatted_date
+            })
+        cur.execute(SQL("""
+        select e.id, e.email, e.username, e.last_name, e.first_name, eto.data from executor_to_order eto 
+join orders o on o.id = eto.order_id 
+join executor e on e.id = eto.executor_id 
+join customer c on c.id = o.customer_id 
+where c.id = {customer_id} and eto.status = 'approved customer'
+        """).format(customer_id=Literal(session.get('data')['id'])))
+        users_confire = []
+        for user in cur.fetchall():
+            executor_id, email, username, last_name, first_name, data = user
+            formatted_date = datetime.strftime(data, '%d-%m-%Y') if data is not None else None
+
+            users_confire.append({
+                'executor_id': executor_id,
+                'email': email,
+                'username': username,
+                'last_name': last_name,
+                'first_name': last_name,
+                'data': formatted_date
+            })
+        return render_template('customer/active_executor.html', users_review=users_review, users_confire=users_confire)
+    except Exception as ex:
+        logging.error(ex, exc_info=True)
+        conn.rollback()
+        conn.close()
+        return redirect('/')
+
+
+@app.route('/confirmed_order/<order_id>', methods=['GET', 'POST'])
+def confirmed_order(order_id):
+    if not session.get('data'):
+        return redirect('/')
+    if session.get('data')['roll'] != 'customer':
+        return redirect('/')
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    try:
+        cur.execute(SQL("""
+        update order set status = false
+        where id = {order_id}
+        """).format(order_id=Literal(order_id)))
+        conn.commit()
+        cur.execute(SQL("""
+        update executor_to_order set status = 'confirmed customer'
+        where order_id = {order_id}
+        """).format(order_id=Literal(order_id)))
+        conn.commit()
+        return redirect('/profile_customer')
 
     except Exception as ex:
         logging.error(ex, exc_info=True)
