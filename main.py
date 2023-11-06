@@ -398,8 +398,8 @@ def profile_executor_search(id):
     try:
         cur.execute(
             """SELECT username, email, first_name, last_name, rating, specialty, id from executor
-WHERE id = %s""",
-            (id,))
+                WHERE id = %s""",
+            (executor_id,))
         result = cur.fetchone()
         user_data = {
             'username': result[0],
@@ -411,48 +411,55 @@ WHERE id = %s""",
             'id': result[6],
         }
         cur.execute(
-            """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
-join orders o on o.id = eto.order_id 
-where eto.status = 'approved customer' and o.status = true and eto.executor_id = %s""",
+            """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill, eto.status 
+            from executor_to_order eto 
+            join orders o on o.id = eto.order_id 
+            where executor_id = %s and o.status = true and 
+            (eto.status = 'approved customer' or eto.status = 'sent for review') """,
             str(executor_id))
 
         active_orders_list = []
         for order in cur.fetchall():
-            id, title, price, description, date_created, skill = order
+            executor_id, order_id, title, price, description, date_created, skill, status = order
 
             formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
             active_orders_list.append({
-                'id': id,
+                'executor_id': executor_id,
+                'order_id': order_id,
                 'title': title,
                 'description': description,
                 'price': price,
                 'date_created': formatted_date,
                 'skill': skill,
+                'status': status
             })
         cur.execute(
-            """select o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
-join orders o on o.id = eto.order_id 
-where eto.status = 'approved customer' and o.status = false""",
-            executor_id)
+            """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
+            join orders o on o.id = eto.order_id 
+            where executor_id = %s and o.status = false and eto.status = 'confirmed customer'""",
+            str(executor_id))
 
         success_order_list = []
         for order in cur.fetchall():
-            id, title, price, description, date_created, skill = order
+            executor_id, order_id, title, price, description, date_created, skill = order
 
             formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
             success_order_list.append({
-                'id': id,
+                'executor_id': executor_id,
+                'order_id': order_id,
                 'title': title,
                 'description': description,
                 'price': price,
                 'date_created': formatted_date,
                 'skill': skill,
             })
-
+        print(session.get('data')['id'], session.get('data')['roll'])
+        print(executor_id)
         return render_template('executor/profile_search.html', active_orders=active_orders_list,
-                               success_order=success_order_list, user=user_data, )
+                               success_order=success_order_list, user=user_data, executor_id=executor_id,
+                               id=session.get('data')['id'], roll=session.get('data')['roll'])
     except Exception as ex:
         logging.error(ex, exc_info=True)
         conn.rollback()
@@ -1081,7 +1088,7 @@ def confirmed_order(order_id):
     cur = conn.cursor()
     try:
         cur.execute(SQL("""
-        update order set status = false
+        update orders set status = false
         where id = {order_id}
         """).format(order_id=Literal(order_id)))
         conn.commit()

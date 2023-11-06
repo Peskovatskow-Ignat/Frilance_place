@@ -95,7 +95,7 @@
         </div>
         {% endif %}
         {% if active_orders %}
-        <h3 class="u-text u-text-10">Portfolio</h3>
+        <h3 class="u-text u-text-10">Активные заказы</h3>
         <div class="u-border-2 u-border-white u-expanded-width u-line u-line-horizontal u-opacity u-opacity-25 u-line-2"></div>
         {% for order in active_orders %}
         <div class="u-expanded-width u-list u-list-1">
@@ -121,10 +121,10 @@
             Main page
         </a>
         {% endif %}
-        {% if success_order_list %}
+        {% if success_order %}
         <h3 class="u-text u-text-10">Portfolio</h3>
         <div class="u-border-2 u-border-white u-expanded-width u-line u-line-horizontal u-opacity u-opacity-25 u-line-2"></div>
-        {% for order in success_order_list %}
+        {% for order in success_order %}
         <div class="u-expanded-width u-list u-list-1">
             <div>
                 <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-1">
