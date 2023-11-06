@@ -230,15 +230,13 @@ def sign_in():
             cur = conn.cursor()
             try:
                 if roll != 'customer':
-                    cur.execute(
-                        f"""SELECT id, username, first_name, last_name, email, data, rating, password, photo 
-                        FROM executor WHERE email = %s""",
-                        (email,))
+                    cur.execute(SQL(
+                        """SELECT id, username, first_name, last_name, email, data, rating, password, photo 
+                        FROM executor WHERE email = {email}""").format(email=Literal(email)))
                 else:
-                    cur.execute(
-                        f"""SELECT id, username, first_name, last_name, email, data, rating, password, photo 
-                        FROM customer WHERE email = %s""",
-                        (email,))
+                    cur.execute(SQL(
+                        """SELECT id, username, first_name, last_name, email, data, rating, password, photo 
+                        FROM customer WHERE email = {email}""").format(email=Literal(email)))
 
                 user = cur.fetchone()
 
@@ -297,9 +295,16 @@ def sign_up():
                 flash(f'Пользователь с почтой {email} уже зарегистрирован')
                 return redirect('/signup')
 
-            cur.execute(
-                f"""INSERT INTO {roll} (username, email, password, first_name, last_name) VALUES (%s, %s, %s, %s, %s)""",
-                (username, email, password_hash, first_name, last_name))
+            cur.execute(SQL(
+                """INSERT INTO {roll} (username, email, password, first_name, last_name) 
+                VALUES ({username}, {email}, {password}, {first_name}, {last_name})""").format(
+                roll=Literal(roll),
+                username=Literal(username),
+                email=Literal(email),
+                password=Literal(password_hash),
+                first_name=Literal(first_name),
+                last_name=Literal(last_name)
+            ))
 
             conn.commit()
             conn.close()
@@ -321,10 +326,9 @@ def profile_executor():
         cur = conn.cursor()
         executor_id = session.get('data')['id']
         try:
-            cur.execute(
+            cur.execute(SQL(
                 """SELECT username, email, first_name, last_name, rating, specialty, id from executor
-    WHERE id = %s""",
-                (executor_id,))
+                WHERE id = {executor_id}""").format(executor_id=Literal(executor_id)))
             result = cur.fetchone()
             user_data = {
                 'username': result[0],
@@ -335,11 +339,13 @@ def profile_executor():
                 'skill': result[5],
                 'id': result[6],
             }
-            cur.execute(
-                """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill, eto.status from executor_to_order eto 
-    join orders o on o.id = eto.order_id 
-    where executor_id = %s and o.status = true and (eto.status = 'approved customer' or eto.status = 'sent for review') """,
-                str(executor_id))
+            cur.execute(SQL(
+                """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill, eto.status 
+                from executor_to_order eto 
+                join orders o on o.id = eto.order_id 
+                where executor_id = {executor_id} and o.status = true 
+                and (eto.status = 'approved customer' or eto.status = 'sent for review') """).format(
+                executor_id=Literal(executor_id)))
 
             active_orders_list = []
             for order in cur.fetchall():
@@ -357,11 +363,11 @@ def profile_executor():
                     'skill': skill,
                     'status': status
                 })
-            cur.execute(
+            cur.execute(SQL(
                 """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
-    join orders o on o.id = eto.order_id 
-    where executor_id = %s and o.status = false and eto.status = 'confirmed customer'""",
-                str(executor_id))
+                join orders o on o.id = eto.order_id 
+                where executor_id = {executor_id} and o.status = false and eto.status = 'confirmed customer'""").format(
+                executor_id=Literal(executor_id)))
 
             success_order_list = []
             for order in cur.fetchall():
@@ -397,10 +403,9 @@ def profile_executor_search(id):
     conn = get_pg_connect()
     cur = conn.cursor()
     try:
-        cur.execute(
+        cur.execute(SQL(
             """SELECT username, email, first_name, last_name, rating, specialty, id from executor
-                WHERE id = %s""",
-            (executor_id,))
+                WHERE id = {executor_id}""").format(executor_id=Literal(executor_id)))
         result = cur.fetchone()
         user_data = {
             'username': result[0],
@@ -411,13 +416,13 @@ def profile_executor_search(id):
             'skill': result[5],
             'id': result[6],
         }
-        cur.execute(
+        cur.execute(SQL(
             """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill, eto.status 
             from executor_to_order eto 
             join orders o on o.id = eto.order_id 
-            where executor_id = %s and o.status = true and 
-            (eto.status = 'approved customer' or eto.status = 'sent for review') """,
-            str(executor_id))
+            where executor_id = {executor_id} and o.status = true and 
+            (eto.status = 'approved customer' or eto.status = 'sent for review') """).format(
+            executor_id=Literal(executor_id)))
 
         active_orders_list = []
         for order in cur.fetchall():
@@ -435,11 +440,11 @@ def profile_executor_search(id):
                 'skill': skill,
                 'status': status
             })
-        cur.execute(
+        cur.execute(SQL(
             """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
             join orders o on o.id = eto.order_id 
-            where executor_id = %s and o.status = false and eto.status = 'confirmed customer'""",
-            str(executor_id))
+            where executor_id = {executor_id} and o.status = false and eto.status = 'confirmed customer'""").format(
+            executor_id=Literal(executor_id)))
 
         success_order_list = []
         for order in cur.fetchall():
@@ -475,9 +480,9 @@ def profile_customer():
         conn = get_pg_connect()
         cur = conn.cursor()
         try:
-            cur.execute(
-                """SELECT username, email, first_name, last_name from customer WHERE id = %s""",
-                (str(data['id']))
+            cur.execute(SQL(
+                """SELECT username, email, first_name, last_name from customer WHERE id = {id}""").format(
+                id=Literal(session.get('data')['id']))
             )
             result = cur.fetchone()
             user_data = {
@@ -486,7 +491,7 @@ def profile_customer():
                 'first_name': result[2],
                 'last_name': result[3],
             }
-            cur.execute("""with test as (
+            cur.execute(SQL("""with test as (
                         SELECT o.id as order_id, COUNT(*) as comment_num
                         FROM executor_to_order eto
                         JOIN orders o ON eto.order_id = o.id
@@ -508,9 +513,8 @@ def profile_customer():
                                 WHERE o.id = eto.order_id
                             ) AS counter
                         FROM orders o
-                        WHERE o.customer_id = %s and o.status;""",
-                        (str(data['id']))
-                        )
+                        WHERE o.customer_id = {id} and o.status;""").format(id=Literal(session.get('data')['id'])))
+
             active_orders_list = []
             for order in cur.fetchall():
                 id, title, description, price, date_created, customer_id, skill, status, counter = order
@@ -528,7 +532,7 @@ def profile_customer():
                     'counter': counter
                 })
 
-            cur.execute("""with test as (
+            cur.execute(SQL("""with test as (
                         SELECT o.id as order_id, COUNT(*) as comment_num
                         FROM executor_to_order eto
                         JOIN orders o ON eto.order_id = o.id
@@ -549,9 +553,8 @@ def profile_customer():
                                 WHERE o.id = eto.order_id
                             ) AS counter
                         FROM orders o
-                        WHERE o.customer_id = %s and o.status = false;""",
-                        (str(data['id']))
-                        )
+                        WHERE o.customer_id = {id} and o.status = false;""").format(
+                id=Literal(session.get('data')['id'])))
             success_order_list = []
             for order in cur.fetchall():
                 id, title, description, price, date_created, customer_id, skill, status, counter = order
@@ -585,10 +588,10 @@ def profile_customer_search(customers_id):
     conn = get_pg_connect()
     cur = conn.cursor()
     try:
-        cur.execute(
-            """SELECT username, email, first_name, last_name from customer WHERE id = %s""",
-            customers_id
-        )
+        cur.execute(SQL(
+            """SELECT username, email, first_name, last_name from customer WHERE id = {customers_id}""").format(
+            customers_id=Literal(customers_id))
+                    )
         result = cur.fetchone()
         user_data = {
             'username': result[0],
