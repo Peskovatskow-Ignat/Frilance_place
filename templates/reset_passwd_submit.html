@@ -43,16 +43,16 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">
-            <img src="{{ url_for('static', filename='images/money.png') }}" alt="Логотип">
-        </div>
-        <h1>Смена пароля</h1>
-        <form action="/reset/{{ session.get('token')['token'] }}" method="post">
-            <input type="password" name="password" placeholder="Новый пароль" required>
-            <input type="password" name="sub_password" placeholder="Подтвердите пароль" required>
-            <input type="submit" value="Сменить пароль">
-        </form>
+<div class="container">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/money.png') }}" alt="Логотип">
     </div>
+    <h1>Смена пароля</h1>
+    <form action="/reset/{{ session.get('token')['token'] }}" method="post">
+        <input type="password" name="password" placeholder="Новый пароль" required>
+        <input type="password" name="sub_password" placeholder="Подтвердите пароль" required>
+        <input type="submit" value="Сменить пароль">
+    </form>
+</div>
 </body>
 </html>

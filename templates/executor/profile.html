@@ -38,7 +38,13 @@
         </div>
         <div class="u-clearfix u-group-elements u-group-elements-2">
             <h2 class="u-align-left u-custom-font u-text u-text-2">{{user.username}}</h2>
-            <h2 class="u-custom-font u-text u-text-3">265 followers</h2>
+            {% if count > 0 and count == 1 %}
+            <h2 class="u-custom-font u-text u-text-3">Выполнен {{ count }} заказ</h2>
+            {% elif count % 10 in [2, 3, 4] and count not in [12, 13, 14] %}
+            <h2 class="u-custom-font u-text u-text-3">Выполнено {{ count }} заказа</h2>
+            {% else %}
+            <h2 class="u-custom-font u-text u-text-3">Выполнено {{ count }} заказов</h2>
+            {% endif %}
             <p class="u-text u-text-default u-text-4">First Name: {{user.first_name}}</p>
             <p class="u-text u-text-default u-text-5">Last Name: {{user.last_name}}</p>
             <p class="u-text u-text-default u-text-6">Email: {{ user.email }}</p>
@@ -114,7 +120,7 @@
                         <div style="display: flex; justify-content: right; margin-right: 3%">
 
                             <h3
-                               style="margin-right: 1%">Отправлено
+                                    style="margin-right: 1%">Отправлено
                                 на проверку</h3>
                         </div>
                         {% else %}
@@ -159,13 +165,8 @@
             </div>
         </div>
         {% endfor %}
-        <a href="{{ url_for('index') }}"
-           class="u-align-center u-border-none u-btn u-button-style u-custom-color-2 u-hover-feature u-hover-white u-text-body-alt-color u-text-hover-black u-btn-1">Redirect
-            Main page
-        </a>
         {% endif %}
     </div>
-
     {% endblock %}
 </section>
 

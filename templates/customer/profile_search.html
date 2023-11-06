@@ -43,7 +43,13 @@
              data-image-height="2000"></div>
         <div class="u-clearfix u-group-elements u-group-elements-1">
             <h2 class="u-align-left u-custom-font u-text u-text-1">{{user.username}}</h2>
-            <h2 class="u-custom-font u-text u-text-2">265 followers</h2>
+            {% if count > 0 and count == 1 %}
+            <h2 class="u-custom-font u-text u-text-2">Пердложен {{ count }} заказ</h2>
+            {% elif count % 10 in [2, 3, 4] and count not in [12, 13, 14] %}
+            <h2 class="u-custom-font u-text u-text-2">Пердложенно {{ count }} заказа</h2>
+            {% else %}
+            <h2 class="u-custom-font u-text u-text-2">Пердложен {{ count }} заказов</h2>
+            {% endif %}
             <p class="u-text u-text-default u-text-3">First name: {{user.first_name}} </p>
             <p class="u-text u-text-default u-text-4">Last name {{user.last_name}}</p>
             <p class="u-text u-text-default u-text-4">Email: {{ user.email }}</p>
@@ -128,9 +134,6 @@
         </div>
 
         {% endfor %}
-        <a href="{{ url_for('index') }}"
-           class="u-align-center u-border-none u-btn u-button-style u-custom-color-2 u-hover-feature u-hover-white u-text-body-alt-color u-text-hover-black u-btn-3">Redirect
-            Main page</a>
         {% if success_order %}
         <div class="u-align-center u-clearfix u-expanded-width u-group-elements u-group-elements-2">
             <h3 class="u-text u-text-12">Closed orders</h3>
@@ -153,17 +156,6 @@
                                 <p class="u-text u-text-default u-text-grey-40 u-text-10">{{ order.skill }}</p>
                             </div>
                         </div>
-                        {% if id == customer_id and roll == 'customer' %}
-                        {% if order.counter %}
-                        <a href="/order/{{ order.id }}"
-                           class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Accept
-                            ({{ order.counter }})</a>
-                        {% endif %}
-                        {% else %}
-
-                        <a href="/order/{{ order.id }}"
-                           class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Accept</a>
-                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -7,15 +7,18 @@
     <div class="u-clearfix u-sheet u-sheet-1">
         <div class="u-form u-form-1" id="carousel-0464">
             <form action="/profile_customer/edit" method="post"
-                   style="margin-bottom: -356px"  name="form">
+                  style="margin-bottom: -356px" name="form">
                 <div class="u-form-group u-form-name u-label-left u-form-group-1">
-                    <label for="name-aee8" class="u-custom-font u-label u-spacing-0 u-label-1"  style="margin-bottom: 20px;">Username</label>
+                    <label for="name-aee8" class="u-custom-font u-label u-spacing-0 u-label-1"
+                           style="margin-bottom: 20px;">Username</label>
                     <input type="text" placeholder="Name" id="name-aee8" value="{{ user.username }}" name="username"
-                           class="u-input u-input-rectangle u-radius-10 u-input-1" style="margin-bottom: 20px;" required="">
+                           class="u-input u-input-rectangle u-radius-10 u-input-1" style="margin-bottom: 20px;"
+                           required="">
                 </div>
 
                 <div class="u-form-group u-form-select u-label-left u-form-group-2">
-                    <label for="select-2c44" class="u-custom-font u-label u-spacing-0 u-label-2" style="margin-bottom: 20px;">Firstname</label>
+                    <label for="select-2c44" class="u-custom-font u-label u-spacing-0 u-label-2"
+                           style="margin-bottom: 20px;">Firstname</label>
                     <div class="u-form-select-wrapper">
                         <input id="select-2c44" placeholder="Firstname" value="{{ user.first_name }}" name="first_name"
                                class="u-input u-input-rectangle u-radius-10 u-input-2" style="margin-bottom: 20px;">
@@ -26,13 +29,16 @@
                 </div>
 
                 <div class="u-form-group u-label-left u-form-group-3">
-                    <label for="text-2b61" class="u-custom-font u-label u-spacing-0 u-label-3" style="margin-bottom: 20px;">Lastname</label>
+                    <label for="text-2b61" class="u-custom-font u-label u-spacing-0 u-label-3"
+                           style="margin-bottom: 20px;">Lastname</label>
                     <input type="text" placeholder="Lastname" id="text-2b61" value="{{ user.last_name }}"
-                           name="last_name" class="u-input u-input-rectangle u-radius-10 u-input-3" style="margin-bottom: 20px;">
+                           name="last_name" class="u-input u-input-rectangle u-radius-10 u-input-3"
+                           style="margin-bottom: 20px;">
                 </div>
 
                 <div class="u-form-group u-label-left u-form-group-4">
-                    <label for="text-4e3b" class="u-custom-font u-label u-spacing-0 u-label-4" style="margin-bottom: 20px;">Email</label>
+                    <label for="text-4e3b" class="u-custom-font u-label u-spacing-0 u-label-4"
+                           style="margin-bottom: 20px;">Email</label>
                     <input type="text" placeholder="Email" id="text-4e3b" value="{{ user.email }}" name="email"
                            class="u-input u-input-rectangle u-radius-10 u-input-4" style="margin-bottom: 20px;">
                 </div>
@@ -42,15 +48,16 @@
                     <input type="submit" value="submit" class="u-form-control-hidden">
                     <div class="u-align-center u-btn-submit-container">
                         <a href="#"
-                               class="u-border-none u-btn u-btn-submit u-button-style u-custom-color-2 u-text-body-alt-color u-btn-1">Submit</a>
+                           class="u-border-none u-btn u-btn-submit u-button-style u-custom-color-2 u-text-body-alt-color u-btn-1">Submit</a>
                     </div>
                 </div>
 
             </form>
 
         </div>
-        <image href="{{ url_for('static', filename='css/people.png')  }}" class="u-border-4 u-border-white u-image u-image-circle u-image-1" alt="" data-image-width="3000"
-             data-image-height="2000"></image>
+        <image href="{{ url_for('static', filename='css/people.png')  }}"
+               class="u-border-4 u-border-white u-image u-image-circle u-image-1" alt="" data-image-width="3000"
+               data-image-height="2000"></image>
         <span class="u-custom-color-2 u-icon u-icon-circle u-icon-1"><svg class="u-svg-link"
                                                                           preserveAspectRatio="xMidYMin slice"
                                                                           viewBox="0 0 52 52" style=""><use

@@ -40,7 +40,9 @@
         <div class="u-list u-list-2">
 
             <div class="u-repeater u-repeater-2">
+                {% if users_review %}
                 <h1>Готовые заказы</h1>
+                {% endif %}
                 {% for user in users_review %}
                 <div class="u-align-left u-container-style u-custom-color-3 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-2">
                     <div class="u-container-layout u-similar-container u-valign-middle u-container-layout-2">
@@ -67,7 +69,9 @@
                     </div>
                 </div>
                 {% endfor %}
+                {% if users_confire %}
                 <h1>Ожидаемые исполнители</h1>
+                {% endif %}
                 {% for user in users_confire %}
                 <div class="u-align-left u-container-style u-custom-color-3 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-2">
                     <div class="u-container-layout u-similar-container u-valign-middle u-container-layout-2">

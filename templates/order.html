@@ -83,12 +83,12 @@
                             <p class="u-text u-text-default u-text-grey-30 u-text-11">Email: {{ user.email }}</p></a>
                         {% if session['data'] %}
                         {% if session['data'].roll == 'customer' %}
-                            <div style="display: flex; justify-content: right; margin-right: 3%">
+                        <div style="display: flex; justify-content: right; margin-right: 3%">
 
-                        <a href="/submit_order/{{ user.order_id }}/{{ user.executor_id }}" style="margin-right: 1%"
-                           class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Принять</a>
+                            <a href="/submit_order/{{ user.order_id }}/{{ user.executor_id }}" style="margin-right: 1%"
+                               class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Принять</a>
                             <a href="/refuse_order/{{ user.order_id }}/{{ user.executor_id }}"
-                           class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Отклонить</a>
+                               class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Отклонить</a>
                         </div>
                                {% endif %}
                         {% endif %}
