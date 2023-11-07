@@ -268,15 +268,9 @@ def sign_up():
                 return redirect('/signup')
 
             cur.execute(SQL(
-                """INSERT INTO {roll} (username, email, password, first_name, last_name) 
-                VALUES ({username}, {email}, {password}, {first_name}, {last_name})""").format(
-                roll=Literal(roll),
-                username=Literal(username),
-                email=Literal(email),
-                password=Literal(password_hash),
-                first_name=Literal(first_name),
-                last_name=Literal(last_name)
-            ))
+                f"""INSERT INTO "{roll}" (username, email, password, first_name, last_name) 
+                VALUES (%s, %s, %s, %s, %s)"""), (username, email, password_hash, first_name, last_name)
+            )
 
             conn.commit()
             conn.close()
@@ -316,7 +310,9 @@ def profile_executor():
                 from executor_to_order eto 
                 join orders o on o.id = eto.order_id 
                 where executor_id = {executor_id} and o.status = true 
-                and (eto.status = 'approved customer' or eto.status = 'sent for review') """).format(
+                and (eto.status = 'approved customer' 
+                or eto.status = 'sent for review' 
+                or eto.status = 'sent for approval')""").format(
                 executor_id=Literal(executor_id)))
 
             active_orders_list = []
@@ -359,7 +355,7 @@ def profile_executor():
 
             return render_template('executor/profile.html', user=user_data, active_orders=active_orders_list,
                                    success_order=success_order_list,
-                                   count=len(active_orders_list) + len(success_order_list))
+                                   count=len(success_order_list))
         except Exception as ex:
             logging.error(ex, exc_info=True)
             conn.rollback()
@@ -437,7 +433,7 @@ def profile_executor_search(id):
         return render_template('executor/profile_search.html', active_orders=active_orders_list,
                                success_order=success_order_list, user=user_data, executor_id=executor_id,
                                id=session.get('data')['id'], roll=session.get('data')['roll'],
-                               count=len(active_orders_list) + len(success_order_list))
+                               count=len(success_order_list))
     except Exception as ex:
         logging.error(ex, exc_info=True)
         conn.rollback()
@@ -1087,6 +1083,11 @@ def confirmed_order(order_id):
         cur.execute(SQL("""
         update executor_to_order set status = 'confirmed customer'
         where order_id = {order_id}
+        """).format(order_id=Literal(order_id)))
+        conn.commit()
+        cur.execute(SQL("""
+        delete from executor_to_order eto
+        where eto.order_id = {order_id} and eto.status != 'confirmed customer'
         """).format(order_id=Literal(order_id)))
         conn.commit()
         return redirect('/profile_customer')
