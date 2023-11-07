@@ -1,42 +1,14 @@
 import logging
 import os
-import psycopg2
 import hashlib
 
 from flask import render_template, redirect, session, flash, Flask, request, logging
 from flask_mail import Mail, Message
 from psycopg2.sql import SQL, Literal
 
-from functions import generate_secure_string
+from functions import generate_secure_string, get_pg_connect
 from datetime import datetime
 import base64
-
-
-def get_pg_connect():
-    """
-    Try - executing создан для удобства для того чтобы не запускать через compose
-    подключение к созданному контейнеру
-    """
-
-    try:
-        conn = psycopg2.connect(
-            host='postgres',
-            port=5432,
-            database=os.getenv("POSTGRES_DB"),
-            user=os.getenv("POSTGRES_USER"),
-            password=os.getenv("POSTGRES_PASSWORD")
-        )
-    except Exception as ex:
-        conn = psycopg2.connect(
-            host='localhost',
-            port=3434,
-            database='flask',
-            user='admin',
-            password='change_me'
-        )
-
-    return conn
-
 
 app = Flask(__name__)
 
@@ -591,7 +563,7 @@ def profile_customer_search(customers_id):
         cur.execute(SQL(
             """SELECT username, email, first_name, last_name from customer WHERE id = {customers_id}""").format(
             customers_id=Literal(customers_id))
-                    )
+        )
         result = cur.fetchone()
         user_data = {
             'username': result[0],
@@ -599,7 +571,7 @@ def profile_customer_search(customers_id):
             'first_name': result[2],
             'last_name': result[3],
         }
-        cur.execute("""with test as (
+        cur.execute(SQL("""with test as (
                     SELECT o.id as order_id, COUNT(*) as comment_num
                     FROM executor_to_order eto
                     JOIN orders o ON eto.order_id = o.id
@@ -621,8 +593,7 @@ def profile_customer_search(customers_id):
                             WHERE o.id = eto.order_id
                         ) AS counter
                     FROM orders o
-                    WHERE o.customer_id = %s and o.status;""",
-                    customers_id
+                    WHERE o.customer_id = {customers_id} and o.status;""").format(customers_id=Literal(customers_id))
                     )
         active_orders_list = []
         for order in cur.fetchall():
@@ -641,7 +612,7 @@ def profile_customer_search(customers_id):
                 'counter': counter
             })
 
-        cur.execute("""with test as (
+        cur.execute(SQL("""with test as (
                     SELECT o.id as order_id, COUNT(*) as comment_num
                     FROM executor_to_order eto
                     JOIN orders o ON eto.order_id = o.id
@@ -662,9 +633,9 @@ def profile_customer_search(customers_id):
                             WHERE o.id = eto.order_id
                         ) AS counter
                     FROM orders o
-                    WHERE o.customer_id = %s and o.status = false;""",
-                    customers_id
-                    )
+                    WHERE o.customer_id = {customers_id} and o.status = false;""").format(
+            customers_id=Literal(customers_id))
+        )
         success_order_list = []
         for order in cur.fetchall():
             id, title, description, price, date_created, customer_id, skill, status, counter = order
@@ -722,7 +693,7 @@ def profile_executor_edit():
             conn = get_pg_connect()
             cur = conn.cursor()
             email = request.form.get('email')
-            cur.execute("SELECT email FROM executor WHERE id != %s", str(data['id']))
+            cur.execute(SQL("SELECT email FROM executor WHERE id != {id}").format(id=Literal(data['id'])))
             existing_emails = [row[0] for row in cur.fetchall()]
             if email in existing_emails:
                 conn.close()
@@ -732,11 +703,17 @@ def profile_executor_edit():
             last_name = request.form.get('last_name')
             first_name = request.form.get('first_name')
             skill = request.form.get('skill')
-            cur.execute("""
+            cur.execute(SQL("""
                 UPDATE executor
-                SET username = %s, last_name = %s, first_name = %s, specialty = %s, email = %s
-                WHERE id = %s
-            """, (username, last_name, first_name, skill, email, str(data['id'])))
+                SET username = {username}, last_name = {last_name}, first_name = {first_name}, specialty = {skill}, email = {email}
+                WHERE id = {id}
+            """).format(username=Literal(username),
+                        last_name=Literal(last_name),
+                        first_name=Literal(first_name),
+                        skill=Literal(skill),
+                        email=Literal(email),
+                        id=Literal(data['id']))
+                        )
             conn.commit()
             return redirect('/profile_executor')
     if session.get('data'):
@@ -744,10 +721,9 @@ def profile_executor_edit():
         conn = get_pg_connect()
         cur = conn.cursor()
         try:
-            cur.execute(
+            cur.execute(SQL(
                 """SELECT username, email, first_name, last_name, rating, specialty from executor 
-WHERE id = %s""",
-                (str(data['id'])))
+WHERE id = {id}""").format(id=Literal(data['id'])))
             result = cur.fetchone()
             user_data = {
                 'username': result[0],
@@ -774,7 +750,7 @@ def profile_customer_edit():
             conn = get_pg_connect()
             cur = conn.cursor()
             email = request.form.get('email')
-            cur.execute("SELECT email FROM customer WHERE id != %s", str(data['id']))
+            cur.execute(SQL("SELECT email FROM customer WHERE id != {id}").format(id=Literal(data['id'])))
             existing_emails = [row[0] for row in cur.fetchall()]
             if email in existing_emails:
                 conn.close()
@@ -783,22 +759,26 @@ def profile_customer_edit():
             username = request.form.get('username')
             last_name = request.form.get('last_name')
             first_name = request.form.get('first_name')
-            cur.execute("""
-                UPDATE customer
-                SET username = %s, last_name = %s, first_name = %s, email = %s
-                WHERE id = %s
-            """, (username, last_name, first_name, email, str(data['id'])))
             conn.commit()
+            cur.execute(SQL("""
+                UPDATE customer
+                SET username = {username}, last_name = {last_name}, first_name = {first_name}, email = {email}
+                WHERE id = {id}
+            """).format(username=Literal(username),
+                        last_name=Literal(last_name),
+                        first_name=Literal(first_name),
+                        email=Literal(email),
+                        id=Literal(data['id']))
+                        )
             return redirect('/profile_customer')
     if session.get('data'):
         data = session.get('data')
         conn = get_pg_connect()
         cur = conn.cursor()
         try:
-            cur.execute(
+            cur.execute(SQL(
                 """SELECT username, email, first_name, last_name, rating from customer 
-WHERE id = %s""",
-                (str(data['id'])))
+WHERE id = {id}""").format(id=Literal(data['id'])))
             result = cur.fetchone()
             user_data = {
                 'username': result[0],
@@ -829,9 +809,16 @@ def new_orders():
         conn = get_pg_connect()
         cur = conn.cursor()
         try:
-            cur.execute("""INSERT INTO orders (title, price, description, full_description, customer_id, skill)
-                           VALUES (%s, %s, %s, %s, %s, %s)""",
-                        (title, price, description, full_description, str(data['id']), skill))
+            cur.execute(SQL("""INSERT INTO orders 
+            (title, price, description, full_description, customer_id, skill)
+            VALUES ({title}, {price}, {description}, {full_description}, {customer_id}, {skill})""").format(
+                title=Literal(title),
+                price=Literal(price),
+                description=Literal(description),
+                full_description=Literal(full_description),
+                customer_id=Literal(data['id']),
+                skill=Literal(skill))
+                        )
             conn.commit()
             return redirect('/profile_customer')
         except Exception as ex:
@@ -851,20 +838,20 @@ def add_order(id):
     cur = conn.cursor()
     data = session.get('data')
     try:
-        cur.execute('select email from executor where id = %s', (str(data['id'])))
+        cur.execute(SQL('select email from executor where id = {id}').format(id=Literal(data['id'])))
         email_executor = cur.fetchone()[0]
-        cur.execute("""
+        cur.execute(SQL("""
         select c.email from orders o 
 join customer c on c.id = o.customer_id 
-where o.id = %s""", (id,))
+where o.id = {id}""").format(id=Literal(id)))
         customer_email = cur.fetchone()[0]
         msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
                       recipients=[customer_email])
         msg.html = render_template('email_orders_add.html', email=email_executor)
         mail.send(msg)
-        cur.execute("""
+        cur.execute(SQL("""
                 INSERT INTO executor_to_order (order_id, executor_id)
-                VALUES (%s, %s)""", (id, str(data['id'])))
+                VALUES ({order_id}, {executor_id})""").format(order_id=Literal(id), executor_id=Literal(data['id'])))
         conn.commit()
         flash("Спасибо большое за обраную связь, мы обязательно с вами свяжемся!!!")
         return redirect('/profile_executor')
@@ -884,7 +871,8 @@ def reset_password():
         conn = get_pg_connect()
         cur = conn.cursor()
         try:
-            cur.execute(f"""select id from {roll} where email = %s""", (email,))
+            cur.execute(
+                SQL("""select id from {roll} where email = {email}""").format(roll=Literal(roll), email=Literal(email)))
             id = cur.fetchone()[0]
             session['token'] = {'token': generate_secure_string(), 'roll': roll, 'id': id}
             flash('На вашу почту было направлено письмо с новым паролем')
@@ -911,11 +899,12 @@ def reset(token):
             if request.form.get('password') != request.form.get('sub_password'):
                 return redirect('/')
             try:
-                cur.execute(f"""UPDATE {session.get('token')['roll']} 
-                SET password = %s
-                WHERE id = %s""", (
-                    hashlib.sha224((request.form.get('password').encode())).hexdigest(),
-                    session.get('token')['id']))
+                cur.execute(SQL("""UPDATE {roll} 
+                SET password = {password}
+                WHERE id = {id}""").format(roll=Literal(session.get('token')['roll']),
+                                           password=Literal(
+                                               hashlib.sha224((request.form.get('password').encode())).hexdigest()),
+                                           id=Literal(session.get('token')['id'])))
                 conn.commit()
                 session.pop('token', None)
                 return redirect('/signin')
