@@ -818,7 +818,7 @@ def new_orders():
                 full_description=Literal(full_description),
                 customer_id=Literal(data['id']),
                 skill=Literal(skill))
-                        )
+            )
             conn.commit()
             return redirect('/profile_customer')
         except Exception as ex:
@@ -1107,10 +1107,14 @@ def orders_executor_skill():
     conn = get_pg_connect()
     cur = conn.cursor()
     try:
-        cur.execute(
-            """SELECT id, title, description, price, date, customer_id, skill, status FROM orders 
-            join 
-            where status""")
+        cur.execute(SQL("""
+        select specialty from executor e 
+        where id = {id}
+        """).format(id=Literal(session.get('data')['id'])))
+        skill = cur.fetchone()[0]
+        cur.execute(SQL(
+            """SELECT o.id, title, description, price, date, customer_id, skill, o.status FROM orders o
+                where o.status and o.skill = {skill}""").format(skill=Literal(skill)))
 
         orders_list = []
         for order in cur.fetchall():
