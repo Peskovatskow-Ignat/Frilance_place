@@ -47,6 +47,11 @@ def index():
         except Exception as ex:
             conn.rollback()
             conn.close()
+            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                          recipients=['frilansplace@gmail.com'])
+            msg.body = f'Ошибка на стороне сервера {ex}'
+            mail.send(msg)
             return redirect('/')
     return render_template('index.html')
 
@@ -78,10 +83,14 @@ def orders_skill(skill):
         return render_template('orders.html', orders=orders_list, count=len(orders_list))
 
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
-        return "Ошибка при получении заказов из базы данных"
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
 
 
 @app.route('/order/<id>')
@@ -139,10 +148,14 @@ WHERE o.id = {id}""").format(id=Literal(id)))
             return render_template('order.html', order=order_dict, users=users_dict, customer=cur.fetchone()[0],
                                    order_id=order_id)
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
-        return "Ошибка при получении заказов из базы данных"
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
 
     finally:
         cur.close()
@@ -178,10 +191,14 @@ def orders():
         return render_template('orders.html', orders=orders_list, count=len(orders_list))
 
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
-        return "Ошибка при получении заказов из базы данных"
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
 
     finally:
         cur.close()
@@ -226,10 +243,17 @@ def sign_in():
                     return redirect('/signin')
 
             except Exception as ex:
-                logging.error(ex, exc_info=True)
-                flash("Произошла ошибка при входе. Пожалуйста, попробуйте снова позже.")
+                conn.rollback()
+                conn.close()
+                flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+                msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                              recipients=['frilansplace@gmail.com'])
+                msg.body = f'Ошибка на стороне сервера {ex}'
+                mail.send(msg)
+                return redirect('/')
 
             finally:
+                cur.close()
                 conn.close()
 
     return render_template("sign_in.html")
@@ -276,11 +300,20 @@ def sign_up():
             conn.close()
 
             return redirect('/signin')
+
         except Exception as ex:
-            logging.error(ex, exc_info=True)
             conn.rollback()
             conn.close()
-            return f"Error: {ex}"
+            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                          recipients=['frilansplace@gmail.com'])
+            msg.body = f'Ошибка на стороне сервера {ex}'
+            mail.send(msg)
+            return redirect('/')
+
+        finally:
+            cur.close()
+            conn.close()
 
     return render_template('sign_up.html')
 
@@ -357,10 +390,18 @@ def profile_executor():
                                    success_order=success_order_list,
                                    count=len(success_order_list))
         except Exception as ex:
-            logging.error(ex, exc_info=True)
             conn.rollback()
             conn.close()
-            return render_template('index.html')
+            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                          recipients=['frilansplace@gmail.com'])
+            msg.body = f'Ошибка на стороне сервера {ex}'
+            mail.send(msg)
+            return redirect('/')
+
+        finally:
+            cur.close()
+            conn.close()
 
     return render_template('index.html')
 
@@ -435,10 +476,18 @@ def profile_executor_search(id):
                                id=session.get('data')['id'], roll=session.get('data')['roll'],
                                count=len(success_order_list))
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
-        return render_template('index.html')
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/profile_customer', methods=['GET', ])
@@ -543,10 +592,18 @@ def profile_customer():
                                    success_order=success_order_list,
                                    count=len(active_orders_list) + len(success_order_list))
         except Exception as ex:
-            logging.error(ex, exc_info=True)
             conn.rollback()
             conn.close()
+            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                          recipients=['frilansplace@gmail.com'])
+            msg.body = f'Ошибка на стороне сервера {ex}'
+            mail.send(msg)
             return redirect('/')
+
+        finally:
+            cur.close()
+            conn.close()
 
     return redirect('/')
 
@@ -653,10 +710,18 @@ def profile_customer_search(customers_id):
                                count=len(active_orders_list) + len(success_order_list))
 
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
-        return "Ошибка при получении статей из базы данных"
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/del_session', methods=['GET'])
@@ -731,10 +796,18 @@ WHERE id = {id}""").format(id=Literal(data['id'])))
             }
             return render_template('executor/profile_edit.html', user=user_data)
         except Exception as ex:
-            logging.error(ex, exc_info=True)
             conn.rollback()
             conn.close()
+            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                          recipients=['frilansplace@gmail.com'])
+            msg.body = f'Ошибка на стороне сервера {ex}'
+            mail.send(msg)
             return redirect('/')
+
+        finally:
+            cur.close()
+            conn.close()
     return redirect('/')
 
 
@@ -786,10 +859,18 @@ WHERE id = {id}""").format(id=Literal(data['id'])))
 
             return render_template('customer/profile_edit.html', user=user_data)
         except Exception as ex:
-            logging.error(ex, exc_info=True)
             conn.rollback()
             conn.close()
+            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                          recipients=['frilansplace@gmail.com'])
+            msg.body = f'Ошибка на стороне сервера {ex}'
+            mail.send(msg)
             return redirect('/')
+
+        finally:
+            cur.close()
+            conn.close()
     return redirect('/')
 
 
@@ -818,10 +899,18 @@ def new_orders():
             conn.commit()
             return redirect('/profile_customer')
         except Exception as ex:
-            logging.error(ex, exc_info=True)
             conn.rollback()
             conn.close()
+            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                          recipients=['frilansplace@gmail.com'])
+            msg.body = f'Ошибка на стороне сервера {ex}'
+            mail.send(msg)
             return redirect('/')
+
+        finally:
+            cur.close()
+            conn.close()
 
     return render_template('new_orders.html')
 
@@ -854,7 +943,16 @@ where o.id = {id}""").format(id=Literal(id)))
     except Exception as ex:
         conn.rollback()
         conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
         return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/reset_password', methods=['POST', 'GET'])
@@ -905,10 +1003,18 @@ def reset(token):
                 session.pop('token', None)
                 return redirect('/signin')
             except Exception as ex:
-                logging.error(ex, exc_info=True)
                 conn.rollback()
                 conn.close()
-                return redirect('/signup')
+                flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+                msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                              recipients=['frilansplace@gmail.com'])
+                msg.body = f'Ошибка на стороне сервера {ex}'
+                mail.send(msg)
+                return redirect('/')
+
+            finally:
+                cur.close()
+                conn.close()
         return render_template('reset_passwd_submit.html')
     return redirect('/')
 
@@ -941,10 +1047,18 @@ def search_orders():
 
         return render_template('orders.html', orders=orders_list, count=len(orders_list))
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
         return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/del_session_token', methods=['GET', ])
@@ -966,10 +1080,18 @@ def submit_order(order_id, executor_id):
         return redirect('/')
 
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
         return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/refuse_order/<order_id>/<executor_id>', methods=['POST', 'GET'])
@@ -984,10 +1106,18 @@ def refuse_order(order_id, executor_id):
         conn.commit()
         return redirect('/')
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
         return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/send_order_for_review/<order_id>/<executor_id>', methods=['POST', 'GET', ])
@@ -1003,10 +1133,18 @@ def send_order_to_confirm(order_id, executor_id):
         conn.commit()
         return redirect('/')
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
         return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/active_executor')
@@ -1060,10 +1198,18 @@ where c.id = {customer_id} and eto.status = 'approved customer'
             })
         return render_template('customer/active_executor.html', users_review=users_review, users_confire=users_confire)
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
         return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/confirmed_order/<order_id>', methods=['GET', 'POST'])
@@ -1093,10 +1239,18 @@ def confirmed_order(order_id):
         return redirect('/profile_customer')
 
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
         return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/orders_executor_skill')
@@ -1137,10 +1291,18 @@ def orders_executor_skill():
         return render_template('orders.html', orders=orders_list, count=len(orders_list))
 
     except Exception as ex:
-        logging.error(ex, exc_info=True)
         conn.rollback()
         conn.close()
-        return "Ошибка при получении заказов из базы данных"
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
+
+    finally:
+        cur.close()
+        conn.close()
 
 
 if __name__ == '__main__':
