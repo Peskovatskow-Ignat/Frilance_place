@@ -6,6 +6,8 @@ from flask import render_template, redirect, session, flash, Flask, request, log
 from flask_mail import Mail, Message
 from psycopg2.sql import SQL, Literal
 
+from Frilance_place.api_bp.api import api_bp
+from Frilance_place.api_bp.decoratos import login_user
 from functions import generate_secure_string, get_pg_connect
 from datetime import datetime
 import base64
@@ -22,38 +24,38 @@ app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_DEFAULT_SENDER")
 
 mail = Mail(app)
+app.register_blueprint(api_bp, url_prefix="/api")
 
 
 @app.route('/', methods=['GET', ])
+@login_user
 def index():
-    if 'data' in session:
-        data = session['data']
-        conn = get_pg_connect()
-        cur = conn.cursor()
-        try:
+    data = session['data']
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    try:
 
-            if data.get('roll') == 'customer':
-                cur.execute(SQL(
-                    """SELECT username FROM customer WHERE id = {id}""").format(id=Literal(data['id'])))
-            else:
-                cur.execute(SQL(
-                    """SELECT username FROM executor WHERE id = {id}""").format(id=Literal(data['id'])))
+        if data.get('roll') == 'customer':
+            cur.execute(SQL(
+                """SELECT username FROM customer WHERE id = {id}""").format(id=Literal(data['id'])))
+        else:
+            cur.execute(SQL(
+                """SELECT username FROM executor WHERE id = {id}""").format(id=Literal(data['id'])))
 
-            username = cur.fetchone()[0] if cur.rowcount > 0 else None
-            conn.close()
+        username = cur.fetchone()[0] if cur.rowcount > 0 else None
+        conn.close()
 
-            return render_template('index.html', username=username)
+        return render_template('index.html', username=username)
 
-        except Exception as ex:
-            conn.rollback()
-            conn.close()
-            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
-            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
-                          recipients=['frilansplace@gmail.com'])
-            msg.body = f'Ошибка на стороне сервера {ex}'
-            mail.send(msg)
-            return redirect('/')
-    return render_template('index.html')
+    except Exception as ex:
+        conn.rollback()
+        conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
 
 
 @app.route('/orders/<skill>', methods=['GET', ])
@@ -319,91 +321,89 @@ def sign_up():
 
 
 @app.route('/profile_executor', methods=['GET', ])
+@login_user
 def profile_executor():
-    if session.get('data'):
-        conn = get_pg_connect()
-        cur = conn.cursor()
-        executor_id = session.get('data')['id']
-        try:
-            cur.execute(SQL(
-                """SELECT username, email, first_name, last_name, rating, specialty, id from executor
-                WHERE id = {executor_id}""").format(executor_id=Literal(executor_id)))
-            result = cur.fetchone()
-            user_data = {
-                'username': result[0],
-                'email': result[1],
-                'first_name': result[2],
-                'last_name': result[3],
-                'rating': result[4],
-                'skill': result[5],
-                'id': result[6],
-            }
-            cur.execute(SQL(
-                """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill, eto.status 
-                from executor_to_order eto 
-                join orders o on o.id = eto.order_id 
-                where executor_id = {executor_id} and o.status = true 
-                and (eto.status = 'approved customer' 
-                or eto.status = 'sent for review' 
-                or eto.status = 'sent for approval')""").format(
-                executor_id=Literal(executor_id)))
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    executor_id = session.get('data')['id']
+    try:
+        cur.execute(SQL(
+            """SELECT username, email, first_name, last_name, rating, specialty, id from executor
+            WHERE id = {executor_id}""").format(executor_id=Literal(executor_id)))
+        result = cur.fetchone()
+        user_data = {
+            'username': result[0],
+            'email': result[1],
+            'first_name': result[2],
+            'last_name': result[3],
+            'rating': result[4],
+            'skill': result[5],
+            'id': result[6],
+        }
+        cur.execute(SQL(
+            """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill, eto.status 
+            from executor_to_order eto 
+            join orders o on o.id = eto.order_id 
+            where executor_id = {executor_id} and o.status = true 
+            and (eto.status = 'approved customer' 
+            or eto.status = 'sent for review' 
+            or eto.status = 'sent for approval')""").format(
+            executor_id=Literal(executor_id)))
 
-            active_orders_list = []
-            for order in cur.fetchall():
-                executor_id, order_id, title, price, description, date_created, skill, status = order
+        active_orders_list = []
+        for order in cur.fetchall():
+            executor_id, order_id, title, price, description, date_created, skill, status = order
 
-                formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+            formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-                active_orders_list.append({
-                    'executor_id': executor_id,
-                    'order_id': order_id,
-                    'title': title,
-                    'description': description,
-                    'price': price,
-                    'date_created': formatted_date,
-                    'skill': skill,
-                    'status': status
-                })
-            cur.execute(SQL(
-                """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
-                join orders o on o.id = eto.order_id 
-                where executor_id = {executor_id} and o.status = false and eto.status = 'confirmed customer'""").format(
-                executor_id=Literal(executor_id)))
+            active_orders_list.append({
+                'executor_id': executor_id,
+                'order_id': order_id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'date_created': formatted_date,
+                'skill': skill,
+                'status': status
+            })
+        cur.execute(SQL(
+            """select eto.executor_id, o.id, o.title, o.price, description, o.date, skill from executor_to_order eto 
+            join orders o on o.id = eto.order_id 
+            where executor_id = {executor_id} and o.status = false and eto.status = 'confirmed customer'""").format(
+            executor_id=Literal(executor_id)))
 
-            success_order_list = []
-            for order in cur.fetchall():
-                executor_id, order_id, title, price, description, date_created, skill = order
+        success_order_list = []
+        for order in cur.fetchall():
+            executor_id, order_id, title, price, description, date_created, skill = order
 
-                formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+            formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-                success_order_list.append({
-                    'executor_id': executor_id,
-                    'order_id': order_id,
-                    'title': title,
-                    'description': description,
-                    'price': price,
-                    'date_created': formatted_date,
-                    'skill': skill,
-                })
+            success_order_list.append({
+                'executor_id': executor_id,
+                'order_id': order_id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'date_created': formatted_date,
+                'skill': skill,
+            })
 
-            return render_template('executor/profile.html', user=user_data, active_orders=active_orders_list,
-                                   success_order=success_order_list,
-                                   count=len(success_order_list))
-        except Exception as ex:
-            conn.rollback()
-            conn.close()
-            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
-            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
-                          recipients=['frilansplace@gmail.com'])
-            msg.body = f'Ошибка на стороне сервера {ex}'
-            mail.send(msg)
-            return redirect('/')
+        return render_template('executor/profile.html', user=user_data, active_orders=active_orders_list,
+                               success_order=success_order_list,
+                               count=len(success_order_list))
+    except Exception as ex:
+        conn.rollback()
+        conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
 
-        finally:
-            cur.close()
-            conn.close()
-
-    return render_template('index.html')
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/profile_executor_search/<id>', methods=['GET', ])
@@ -491,24 +491,23 @@ def profile_executor_search(id):
 
 
 @app.route('/profile_customer', methods=['GET', ])
+@login_user
 def profile_customer():
-    if session.get('data'):
-        data = session.get('data')
-        conn = get_pg_connect()
-        cur = conn.cursor()
-        try:
-            cur.execute(SQL(
-                """SELECT username, email, first_name, last_name from customer WHERE id = {id}""").format(
-                id=Literal(session.get('data')['id']))
-            )
-            result = cur.fetchone()
-            user_data = {
-                'username': result[0],
-                'email': result[1],
-                'first_name': result[2],
-                'last_name': result[3],
-            }
-            cur.execute(SQL("""with test as (
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    try:
+        cur.execute(SQL(
+            """SELECT username, email, first_name, last_name from customer WHERE id = {id}""").format(
+            id=Literal(session.get('data')['id']))
+        )
+        result = cur.fetchone()
+        user_data = {
+            'username': result[0],
+            'email': result[1],
+            'first_name': result[2],
+            'last_name': result[3],
+        }
+        cur.execute(SQL("""with test as (
                         SELECT o.id as order_id, COUNT(*) as comment_num
                         FROM executor_to_order eto
                         JOIN orders o ON eto.order_id = o.id
@@ -532,24 +531,24 @@ def profile_customer():
                         FROM orders o
                         WHERE o.customer_id = {id} and o.status;""").format(id=Literal(session.get('data')['id'])))
 
-            active_orders_list = []
-            for order in cur.fetchall():
-                id, title, description, price, date_created, customer_id, skill, status, counter = order
-                formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+        active_orders_list = []
+        for order in cur.fetchall():
+            id, title, description, price, date_created, customer_id, skill, status, counter = order
+            formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-                active_orders_list.append({
-                    'id': id,
-                    'title': title,
-                    'description': description,
-                    'price': price,
-                    'date_created': formatted_date,
-                    'customer_id': customer_id,
-                    'skill': skill,
-                    'status': status,
-                    'counter': counter
-                })
+            active_orders_list.append({
+                'id': id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'date_created': formatted_date,
+                'customer_id': customer_id,
+                'skill': skill,
+                'status': status,
+                'counter': counter
+            })
 
-            cur.execute(SQL("""with test as (
+        cur.execute(SQL("""with test as (
                         SELECT o.id as order_id, COUNT(*) as comment_num
                         FROM executor_to_order eto
                         JOIN orders o ON eto.order_id = o.id
@@ -571,41 +570,39 @@ def profile_customer():
                             ) AS counter
                         FROM orders o
                         WHERE o.customer_id = {id} and o.status = false;""").format(
-                id=Literal(session.get('data')['id'])))
-            success_order_list = []
-            for order in cur.fetchall():
-                id, title, description, price, date_created, customer_id, skill, status, counter = order
-                formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+            id=Literal(session.get('data')['id'])))
+        success_order_list = []
+        for order in cur.fetchall():
+            id, title, description, price, date_created, customer_id, skill, status, counter = order
+            formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-                success_order_list.append({
-                    'id': id,
-                    'title': title,
-                    'description': description,
-                    'price': price,
-                    'date_created': formatted_date,
-                    'customer_id': customer_id,
-                    'skill': skill,
-                    'status': status,
-                    'counter': counter
-                })
-            return render_template('customer/profile.html', user=user_data, active_orders=active_orders_list,
-                                   success_order=success_order_list,
-                                   count=len(active_orders_list) + len(success_order_list))
-        except Exception as ex:
-            conn.rollback()
-            conn.close()
-            flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
-            msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
-                          recipients=['frilansplace@gmail.com'])
-            msg.body = f'Ошибка на стороне сервера {ex}'
-            mail.send(msg)
-            return redirect('/')
+            success_order_list.append({
+                'id': id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'date_created': formatted_date,
+                'customer_id': customer_id,
+                'skill': skill,
+                'status': status,
+                'counter': counter
+            })
+        return render_template('customer/profile.html', user=user_data, active_orders=active_orders_list,
+                               success_order=success_order_list,
+                               count=len(active_orders_list) + len(success_order_list))
+    except Exception as ex:
+        conn.rollback()
+        conn.close()
+        flash('На стороне сервера произошла ошибка. Мы уже работаем над ней')
+        msg = Message("Вам поступило новое обращение на сайте", sender='frilansplace@gmail.com',
+                      recipients=['frilansplace@gmail.com'])
+        msg.body = f'Ошибка на стороне сервера {ex}'
+        mail.send(msg)
+        return redirect('/')
 
-        finally:
-            cur.close()
-            conn.close()
-
-    return redirect('/')
+    finally:
+        cur.close()
+        conn.close()
 
 
 @app.route('/profile_customer_search/<customers_id>', methods=['GET'])
@@ -747,24 +744,24 @@ def contact():
 
 
 @app.route('/profile_executor/edit', methods=['POST', "GET"])
+@login_user
 def profile_executor_edit():
     if request.method == 'POST':
-        if session.get('data'):
-            data = session.get('data')
-            conn = get_pg_connect()
-            cur = conn.cursor()
-            email = request.form.get('email')
-            cur.execute(SQL("SELECT email FROM executor WHERE id != {id}").format(id=Literal(data['id'])))
-            existing_emails = [row[0] for row in cur.fetchall()]
-            if email in existing_emails:
-                conn.close()
-                flash(f'Пользователь с почтой {email} уже зарегистрирован')
-                return redirect('/executor/profile')
-            username = request.form.get('username')
-            last_name = request.form.get('last_name')
-            first_name = request.form.get('first_name')
-            skill = request.form.get('skill')
-            cur.execute(SQL("""
+        data = session.get('data')
+        conn = get_pg_connect()
+        cur = conn.cursor()
+        email = request.form.get('email')
+        cur.execute(SQL("SELECT email FROM executor WHERE id != {id}").format(id=Literal(data['id'])))
+        existing_emails = [row[0] for row in cur.fetchall()]
+        if email in existing_emails:
+            conn.close()
+            flash(f'Пользователь с почтой {email} уже зарегистрирован')
+            return redirect('/executor/profile')
+        username = request.form.get('username')
+        last_name = request.form.get('last_name')
+        first_name = request.form.get('first_name')
+        skill = request.form.get('skill')
+        cur.execute(SQL("""
                 UPDATE executor
                 SET username = {username}, last_name = {last_name}, first_name = {first_name}, specialty = {skill}, email = {email}
                 WHERE id = {id}
@@ -774,9 +771,9 @@ def profile_executor_edit():
                         skill=Literal(skill),
                         email=Literal(email),
                         id=Literal(data['id']))
-                        )
-            conn.commit()
-            return redirect('/profile_executor')
+                    )
+        conn.commit()
+        return redirect('/profile_executor')
     if session.get('data'):
         data = session.get('data')
         conn = get_pg_connect()
@@ -812,9 +809,9 @@ WHERE id = {id}""").format(id=Literal(data['id'])))
 
 
 @app.route('/profile_customer/edit', methods=['POST', "GET", ])
+@login_user
 def profile_customer_edit():
     if request.method == 'POST':
-        if session.get('data'):
             data = session.get('data')
             conn = get_pg_connect()
             cur = conn.cursor()
@@ -875,6 +872,7 @@ WHERE id = {id}""").format(id=Literal(data['id'])))
 
 
 @app.route('/customer/add_orders', methods=['POST', 'GET'])
+@login_user
 def new_orders():
     if request.method == 'POST':
         title = request.form.get('title')
@@ -956,9 +954,8 @@ where o.id = {id}""").format(id=Literal(id)))
 
 
 @app.route('/reset_password', methods=['POST', 'GET'])
+@login_user
 def reset_password():
-    if session.get('data'):
-        return redirect('/')
     if request.method == 'POST':
         email = request.form.get('email')
         roll = request.form.get('roll')
@@ -1148,9 +1145,8 @@ def send_order_to_confirm(order_id, executor_id):
 
 
 @app.route('/active_executor')
+@login_user
 def active_executor():
-    if not session.get('data'):
-        return redirect('/')
     if session.get('data')['roll'] != 'customer':
         return redirect('/')
     conn = get_pg_connect()
@@ -1213,9 +1209,8 @@ where c.id = {customer_id} and eto.status = 'approved customer'
 
 
 @app.route('/confirmed_order/<order_id>', methods=['GET', 'POST'])
+@login_user
 def confirmed_order(order_id):
-    if not session.get('data'):
-        return redirect('/')
     if session.get('data')['roll'] != 'customer':
         return redirect('/')
     conn = get_pg_connect()
@@ -1254,9 +1249,8 @@ def confirmed_order(order_id):
 
 
 @app.route('/orders_executor_skill')
+@login_user
 def orders_executor_skill():
-    if not session.get('data'):
-        return redirect('/')
     if session.get('data')['roll'] != 'executor':
         return redirect('/')
     conn = get_pg_connect()
