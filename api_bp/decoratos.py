@@ -32,17 +32,9 @@ def token_required(func):
             if token:
                 try:
                     data = jwt.decode(token, current_app.secret_key, algorithms=["HS256"])
-                    user = cur.execute(SQL("""select email, password from executor where email = {email}""").format(
+                    cur.execute(SQL("""select email, password from executor where email = {email}""").format(
                         email=Literal(data["email"])))
                     email, password = cur.fetchone()
-                    print(user)
-                    print(data)
-                    print(email, password)
-                    print(1)
-                    print(hashlib.sha224(password.encode()).hexdigest())
-                    print(hashlib.sha224(
-                        data["password"].encode()).hexdigest())
-                    print(2)
 
                     if not email:
                         return {"message": "user not found"}, 401
