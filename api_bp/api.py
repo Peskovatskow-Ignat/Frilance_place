@@ -166,6 +166,6 @@ def get_customer():
                     "email": email,
                     "orders": orders_list
                 }
-            })  # формируем ответ в виде словаря
+            })
         return jsonify(users_list)
     return abort(405)
