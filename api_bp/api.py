@@ -140,32 +140,31 @@ def auth():
 @api_bp.route('/get_customer', methods=["GET", "POST"])
 @token_required
 def get_customer():
-    if request.method == "POST":  # проверяем метод
-        conn = get_pg_connect()
-        cur = conn.cursor()
-        cur.execute(SQL("""SELECT id, username, email FROM customer"""))
-        users = cur.fetchall()
-        users_list = []
-        for user in users:
-            user_id, username, email = user
-            cur.execute(SQL("""SELECT id, title, description, price FROM orders WHERE customer_id = {id}""").format(
-                id=Literal(user_id)))
-            orders = cur.fetchall()
-            orders_list = []
-            for order in orders:
-                order_id, title, description, price = order
-                orders_list.append({
-                    'order_id': order_id,
-                    'title': title,
-                    'description': description,
-                    'price': price
-                })
-            users_list.append({
-                user_id: {
-                    "name": username,
-                    "email": email,
-                    "orders": orders_list
-                }
+    conn = get_pg_connect()
+    cur = conn.cursor()
+    cur.execute(SQL("""SELECT id, username, email FROM customer"""))
+    users = cur.fetchall()
+    users_list = []
+    for user in users:
+        user_id, username, email = user
+        cur.execute(SQL("""SELECT id, title, description, price, status FROM orders WHERE customer_id = {id}""").format(
+            id=Literal(user_id)))
+        orders = cur.fetchall()
+        orders_list = []
+        for order in orders:
+            order_id, title, description, price, status = order
+            orders_list.append({
+                'order_id': order_id,
+                'title': title,
+                'description': description,
+                'price': price,
+                'status': "Активный" if status else "Завершённый"
             })
-        return jsonify(users_list)
-    return abort(405)
+        users_list.append({
+            user_id: {
+                "name": username,
+                "email": email,
+                "orders": orders_list
+            }
+        })
+    return jsonify(users_list)

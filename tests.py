@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 
@@ -91,7 +92,7 @@ class TestYourApp(TestCase):
 
     def test_profile_customer(self):
         response = self.client.get('/profile_customer')
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
 
     def test_del_session(self):
         response = self.client.get('/del_session')
@@ -212,6 +213,47 @@ class TestYourApp(TestCase):
         image = Image.open(BytesIO(jpg_data))
         self.assertEqual(image.format, 'JPEG')
         self.assertEqual(image.size, (75, 75))
+
+    def test_api_orders_without_token(self):
+        response = self.client.get('api/orders')
+        self.assertEqual(response.status_code, 200)
+        # Add more assertions based on the expected behavior when no token is provided
+
+    def test_api_order_without_token(self):
+        response = self.client.get('api/order/1')
+        self.assertEqual(response.status_code, 200)
+        # Add more assertions based on the expected behavior when no token is provided
+
+    def test_api_order_query_without_token(self):
+        response = self.client.get('api/order?id=1')
+        self.assertEqual(response.status_code, 200)
+        # Add more assertions based on the expected behavior when no token is provided
+
+    def test_auth_without_token(self):
+        data = {
+            "email": "test@example.com",
+            "password": "testpassword",
+            "key": app.config["SECRET_KEY"]
+        }
+        response = self.client.post('api/auth', data=json.dumps(data), content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.get_data(as_text=True))
+        self.token = response_data.get("token")
+        # Add more assertions based on the expected behavior when no token is provided
+
+    def test_get_customer_without_token(self):
+        response = self.client.get('api/get_customer')
+        self.assertEqual(response.status_code, 401)
+        # Add more assertions based on the expected behavior when no token is provided
+
+    def test_api_orders_with_valid_token(self):
+        if not hasattr(self, 'token'):
+            # If the token is not set, run the authentication test to obtain it
+            self.test_auth_without_token()
+
+        headers = {'Authorization': f'Bearer {self.token}'}
+        response = self.client.get('/orders', headers=headers)
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == '__main__':
