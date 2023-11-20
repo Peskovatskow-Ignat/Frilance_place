@@ -137,14 +137,12 @@ def auth():
     return abort(418)
 
 
-@api_bp.route('/get_user', methods=["GET", "POST"])
+@api_bp.route('/get_customer', methods=["GET", "POST"])
 @token_required
-def get_user():
+def get_customer():
     if request.method == "POST":  # проверяем метод
         conn = get_pg_connect()
         cur = conn.cursor()
-        user_id = request.json.get("id")
-        print(user_id)
         cur.execute(SQL("""SELECT id, username, email FROM customer"""))
         users = cur.fetchall()
         users_list = []

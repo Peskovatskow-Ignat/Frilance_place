@@ -812,21 +812,21 @@ WHERE id = {id}""").format(id=Literal(data['id'])))
 @login_user
 def profile_customer_edit():
     if request.method == 'POST':
-            data = session.get('data')
-            conn = get_pg_connect()
-            cur = conn.cursor()
-            email = request.form.get('email')
-            cur.execute(SQL("SELECT email FROM customer WHERE id != {id}").format(id=Literal(data['id'])))
-            existing_emails = [row[0] for row in cur.fetchall()]
-            if email in existing_emails:
-                conn.close()
-                flash(f'Пользователь с почтой {email} уже зарегистрирован')
-                return redirect('/profile_executor')
-            username = request.form.get('username')
-            last_name = request.form.get('last_name')
-            first_name = request.form.get('first_name')
-            conn.commit()
-            cur.execute(SQL("""
+        data = session.get('data')
+        conn = get_pg_connect()
+        cur = conn.cursor()
+        email = request.form.get('email')
+        cur.execute(SQL("SELECT email FROM customer WHERE id != {id}").format(id=Literal(data['id'])))
+        existing_emails = [row[0] for row in cur.fetchall()]
+        if email in existing_emails:
+            conn.close()
+            flash(f'Пользователь с почтой {email} уже зарегистрирован')
+            return redirect('/profile_executor')
+        username = request.form.get('username')
+        last_name = request.form.get('last_name')
+        first_name = request.form.get('first_name')
+        conn.commit()
+        cur.execute(SQL("""
                 UPDATE customer
                 SET username = {username}, last_name = {last_name}, first_name = {first_name}, email = {email}
                 WHERE id = {id}
@@ -835,8 +835,8 @@ def profile_customer_edit():
                         first_name=Literal(first_name),
                         email=Literal(email),
                         id=Literal(data['id']))
-                        )
-            return redirect('/profile_customer')
+                    )
+        return redirect('/profile_customer')
     if session.get('data'):
         data = session.get('data')
         conn = get_pg_connect()
