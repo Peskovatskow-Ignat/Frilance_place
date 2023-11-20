@@ -88,37 +88,28 @@ def api_order_qwery():
     order_id = request.args.get('id')
     conn = get_pg_connect()
     cur = conn.cursor()
-    try:
-        cur.execute(SQL(
-            """SELECT id, title, description, price, date, customer_id, skill, status 
-            FROM orders where status and id = {order_id}""").format(
-            order_id=Literal(order_id)))
+    cur.execute(SQL(
+        """SELECT id, title, description, price, date, customer_id, skill, status 
+        FROM orders where status and id = {order_id}""").format(
+        order_id=Literal(order_id)))
 
-        id, title, description, price, date_created, customer_id, skill, status = cur.fetchone()
+    id, title, description, price, date_created, customer_id, skill, status = cur.fetchone()
 
-        # Format the date as 'dd-mm-yyyy'
-        formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
+    # Format the date as 'dd-mm-yyyy'
+    formatted_date = datetime.strftime(date_created, '%d-%m-%Y')
 
-        order_dict = {
-            'id': id,
-            'title': title,
-            'description': description,
-            'price': price,
-            'date_created': formatted_date,
-            'customer_id': customer_id,
-            'skill': skill,
-            'status': status,
-        }
+    order_dict = {
+        'id': id,
+        'title': title,
+        'description': description,
+        'price': price,
+        'date_created': formatted_date,
+        'customer_id': customer_id,
+        'skill': skill,
+        'status': status,
+    }
 
-        return jsonify(order_dict)
-
-    except Exception as ex:
-        print(ex)
-        return abort(418)
-
-    finally:
-        cur.close()
-        conn.close()
+    return jsonify(order_dict)
 
 
 @api_bp.route('/auth', methods=["GET", "POST"])
@@ -127,7 +118,6 @@ def auth():
         email = request.json.get("email")
         password = request.json.get("password")
         key = request.json.get("key")
-        print(key, current_app.secret_key)
         if key != current_app.secret_key:
             return abort(418)
         exp = datetime.now(tz=timezone.utc) + timedelta(hours=1)
