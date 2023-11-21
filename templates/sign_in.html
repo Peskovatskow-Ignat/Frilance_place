@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block content %}
+<meta name="generator" content="Nicepage 5.18.6, nicepage.com">
+<meta name="referrer" content="origin">
+<link id="u-theme-google-font" rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,500,500i,600,600i,700,700i,800,800i">
+<link id="u-page-google-font" rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/log_reg.css') }}" media="screen">
+
+
+<script type="application/ld+json">{
+    "@context": "http://schema.org",
+    "@type": "Organization",
+    "name": "игнат",
+    "logo": "images/540221706-01.png"
+}</script>
+<meta name="theme-color" content="#478ac9">
+<meta property="og:title" content="Profiles">
+<meta property="og:type" content="website">
+<meta data-intl-tel-input-cdn-path="intlTelInput/">
+
+<script src="{{ url_for('static', filename='js/signup.js') }}"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+<style>
+    .u-form-group {
+        margin-bottom: 20px; /* Adjust this value to increase or decrease the spacing */
+    }
+</style>
+
+<section class="u-align-center u-clearfix u-custom-color-3 u-section-4" id="carousel_7e30">
+    <div class="u-clearfix u-sheet u-sheet-1">
+
+        <h2 class="u-align-center u-custom-font u-text u-text-default u-text-1">Sign in</h2>
+
+
+        <div class="u-form u-form-1" id="carousel-0464">
+            <form action="/signin" method="post"
+                  class="u-clearfix u-form-spacing-30  u-inner-form" style="padding: 0px;">
+                <div class="u-form-group u-form-name u-label-top u-form-group-1">
+                    <label for="name-aee8" class="u-custom-font u-label u-label-1">Email</label>
+                    <input type="email" placeholder="Enter your email" id="name-aee8" name="email"
+                           class="u-input u-input-rectangle u-radius-10" required="">
+                </div>
+                <div class="u-form-group u-label-top u-form-group-2">
+                    <label for="text-ecf3" class="u-custom-font u-label u-label-2">Password</label>
+                    <input type="password" placeholder="Enter your password" id="text-ecf3" name="password"
+                           class="u-input u-input-rectangle u-radius-10">
+                </div>
+                <div class="u-form-group u-form-radiobutton u-label-top u-form-group-8">
+                    <label class="u-custom-font u-label u-label-6">Who are you?</label>
+                    <div class="u-form-radio-button-wrapper">
+                        <div class="u-input-row">
+                            <input id="field-092b" type="radio" name="roll" value="executor"
+                                   class="u-field-input" checked="checked" data-calc="">
+                            <label class="u-field-label" for="field-092b">Executor</label>
+                        </div>
+                        <div class="u-input-row">
+                            <input id="field-d518" type="radio" name="roll" value="customer"
+                                   class="u-field-input" data-calc="">
+                            <label class="u-field-label" for="field-d518">Customer</label>
+                        </div>
+                        <div class="u-align-center u-form-group u-form-submit u-label-top">
+                            <input type="submit" value="submit" class="u-form-control-hidden">
+                            <a href="#"
+                               class="u-border-none u-btn u-btn-submit u-button-style u-custom-color-2 u-text-body-alt-color u-btn-1">Submit</a>
+                        </div>
+                        <div class="u-form-send-message u-form-send-success"> Thank you! Your message has been sent.
+                        </div>
+                        <div class="u-form-send-error u-form-send-message"> Unable to send your message. Please fix
+                            errors
+                            then try again.
+                        </div>
+                        <input type="hidden" value="" name="recaptchaResponse">
+                        <input type="hidden" name="formServices" value="a2d74e8a-6d45-8201-8985-8f0a034ff661">
+            </form>
+        </div>
+
+        <div class="u-align-center  u-text-body-alt-color ">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <h5>{{ message }}</h5>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            <a href="{{ url_for('sign_up') }}">I don't have an account</a>
+
+        </div>
+        <div class="u-align-center  u-text-body-alt-color ">
+            <a href="{{ url_for('reset_password') }}">Я забыл пароль</a>
+        </div>
+
+    </div>
+</section>
+
+
+{% endblock %}

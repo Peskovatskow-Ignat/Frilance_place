@@ -1,4 +1,9 @@
 *.idea*
+<<<<<<< HEAD
 *venv*
+=======
+../venv
+>>>>>>> 8aacc48 (fixed compose)
 *.env
 *__pycache__*
+*.coverage*

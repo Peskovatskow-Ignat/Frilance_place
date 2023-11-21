@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html style="font-size: 16px;" lang="ru">
+<head>
+    <meta name="generator" content="Nicepage 5.18.6, nicepage.com">
+    <meta name="referrer" content="origin">
+    <link id="u-theme-google-font" rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,500,500i,600,600i,700,700i,800,800i">
+    <link id="u-page-google-font" rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/orders.css') }}" media="screen">
+
+
+    <style>
+        .block-container {
+            margin-bottom: 240px; /* Adjust the value to control the spacing */
+        }
+    </style>
+    <script type="application/ld+json">{
+        "@context": "http://schema.org",
+        "@type": "Organization",
+        "name": "игнат",
+        "logo": "images/540221706-01.png"
+    }</script>
+    <meta name="theme-color" content="#478ac9">
+    <meta property="og:title" content="Profiles">
+    <meta property="og:type" content="website">
+    <meta data-intl-tel-input-cdn-path="intlTelInput/">
+    <style>
+        .l-m-btn{
+        margin-right: 5%
+        }
+    </style>
+</head>
+{% extends 'base.html' %}
+{% block content %}
+
+<body data-path-to-root="./" class="u-body u-xl-mode" data-lang="ru">
+<section class="u-align-center u-clearfix u-custom-color-3 u-section-2" id="sec-4e56">
+    <div class="u-clearfix u-sheet u-valign-middle u-sheet-1">
+        <div class="u-expanded-width u-list u-list-1">
+            <div class="u-repeater u-repeater-1">
+                <div class="u-align-left u-container-style u-grey-80 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-1">
+                    <div class="u-container-layout u-similar-container u-container-layout-1">
+                        <a href="/profile_customer_search/{{ customer }}">
+                            <div class="u-border-4 u-border-white u-image u-image-circle u-image-1" alt=""
+                                 data-image-width="3000" data-image-height="2000"></div>
+                        </a>
+                        <p class="u-align-left u-text u-text-grey-40 u-text-1">{{ order.date_created }}</p>
+                        <div class="u-clearfix u-group-elements u-group-elements-1">
+                            <h2 class="u-align-left u-custom-font u-text u-text-2">{{ order.username }}</h2>
+                            <h2 class="u-custom-font u-text u-text-grey-40 u-text-3">Rating {{ order.rating }}</h2>
+                        </div>
+                        <p class="u-text u-text-custom-color-1 u-text-default u-text-5">{{ order.price }}$</p>
+                        <p class="u-text u-text-6"> {{ order.title }} <br>
+                            <br>{{order.full_description}}
+                        </p>
+                        {% if session['data'] %}
+                        {% if session['data'].roll != 'customer' %}
+                        <a href="/add_order/{{ order.id }}"
+                           class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-1">Accept</a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if session['data'] %}
+        <div class="u-list u-list-2">
+
+            <div class="u-repeater u-repeater-2">
+                {% for user in users %}
+                <div class="u-align-left u-container-style u-custom-color-3 u-list-item u-radius-10 u-repeater-item u-shape-round u-list-item-2">
+                    <div class="u-container-layout u-similar-container u-valign-middle u-container-layout-2">
+                        <a href="/profile_executor_search/{{ user.executor_id }}">
+                            <div class="u-border-4 u-border-white u-image u-image-circle u-image-2" alt=""
+                                 data-image-width="3000" data-image-height="2000"></div>
+                            <p class="u-text u-text-grey-40 u-text-8">{{ user.data }}</p>
+                            <h2 class="u-custom-font u-text u-text-9">{{ user.username }}<br>
+                            </h2>
+                            <p class="u-text u-text-default u-text-grey-30 u-text-10">Full name: {{ user.first_name }}
+                                {{
+                                user.last_name }}</p>
+                            <p class="u-text u-text-default u-text-grey-30 u-text-11">Email: {{ user.email }}</p></a>
+                        {% if session['data'] %}
+                        {% if session['data'].roll == 'customer' %}
+                        <div style="display: flex; justify-content: right; margin-right: 3%">
+
+                            <a href="/submit_order/{{ user.order_id }}/{{ user.executor_id }}" style="margin-right: 1%"
+                               class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Принять</a>
+                            <a href="/refuse_order/{{ user.order_id }}/{{ user.executor_id }}"
+                               class="u-border-1 u-border-white u-btn u-button-style u-hover-custom-color-2 u-hover-feature u-none u-text-body-alt-color u-text-hover-white u-btn-2">Отклонить</a>
+                        </div>
+                               {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+
+        </div>
+        {% endif %}
+
+    </div>
+
+
+</section>
+
+</body>
+{% endblock %}
+</html>
