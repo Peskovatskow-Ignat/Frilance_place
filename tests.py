@@ -5,7 +5,7 @@ import unittest
 from dotenv import load_dotenv
 
 from functions import generate_secure_string, resize_and_convert_to_jpg, profile_photo
-from main import app
+from main import app  # Import your Flask app
 from flask_testing import TestCase
 from PIL import Image
 from io import BytesIO

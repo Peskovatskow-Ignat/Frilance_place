@@ -1,17 +1,34 @@
 import hashlib
 import jwt
+<<<<<<< HEAD
 from flask import session, render_template, request, current_app
 from functools import wraps
 from psycopg2.sql import SQL, Literal
 
 from functions import get_pg_connect
+=======
+from flask import session, render_template, redirect, request, current_app
+from functools import wraps
+from psycopg2.sql import SQL, Literal
+
+from Frilance_place.functions import get_pg_connect
+>>>>>>> 4d89ff9e7401396192a5275dda1b9aa3aaaa9f40
 
 
 def login_user(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
+<<<<<<< HEAD
         if not session.get('data'):
             return render_template('index.html')
+=======
+        try:
+            if 'data' not in session:
+                return render_template('index.html')
+        except Exception as ex:
+            if not session.get('data'):
+                return redirect('/')
+>>>>>>> 4d89ff9e7401396192a5275dda1b9aa3aaaa9f40
 
         return func(*args, **kwargs)
 

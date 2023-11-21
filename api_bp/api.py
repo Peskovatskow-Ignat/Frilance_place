@@ -4,8 +4,13 @@ from datetime import datetime, timezone, timedelta
 
 from psycopg2.sql import SQL, Literal
 
+<<<<<<< HEAD
 from api_bp.decoratos import token_required
 from functions import get_pg_connect
+=======
+from Frilance_place.api_bp.decoratos import token_required
+from Frilance_place.functions import get_pg_connect
+>>>>>>> 4d89ff9e7401396192a5275dda1b9aa3aaaa9f40
 
 api_bp = Blueprint("api", __name__, template_folder="templates", static_folder="static")
 
